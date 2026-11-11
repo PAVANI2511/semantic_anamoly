@@ -241,3 +241,4 @@ class DGSAModel:
             document_assessment="Empty Document",
             embedding_model_name=config.model.primary_embedding_model
         )
+

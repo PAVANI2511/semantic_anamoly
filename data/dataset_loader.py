@@ -110,3 +110,4 @@ class DatasetLoader:
                 labels.append(s.is_anomaly)
                 categories.append(s.category)
         return texts, labels, categories
+

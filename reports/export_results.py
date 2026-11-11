@@ -183,3 +183,4 @@ class ExportManager:
 
         logger.info(f"Exported HTML/PDF report to {path}")
         return str(path)
+

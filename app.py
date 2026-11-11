@@ -486,3 +486,4 @@ elif nav_option == "ℹ️ Architecture & Methodology":
     6. **Span Localization:** Token-level salience attribution isolating exact phrases contributing to topic shifts or contradictions.
     7. **Explainable AI Engine:** Transparent reasoning reports providing mathematical component contributions and human-interpretable contextual evidence.
     """)
+

@@ -158,3 +158,4 @@ class SentenceSegmenter:
             spans.append(TokenSpan(text=tok, start_char=start, end_char=end))
 
         return tokens, spans
+

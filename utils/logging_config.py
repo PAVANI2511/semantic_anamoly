@@ -32,3 +32,4 @@ def setup_logger(name: str = "semantic_sentinel", log_file: Path | None = None, 
     return logger
 
 logger = setup_logger()
+

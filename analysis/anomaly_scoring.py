@@ -105,3 +105,4 @@ class DGSAScorer:
 
         # Default fallback
         return AnomalyCategories.TOPIC_DEVIATION
+

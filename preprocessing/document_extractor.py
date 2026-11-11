@@ -230,3 +230,4 @@ class DocumentExtractor:
                 is_valid=False,
                 error_message=f"DOCX extraction failed: {str(e)}"
             )
+

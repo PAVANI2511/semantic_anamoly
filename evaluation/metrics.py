@@ -145,3 +145,4 @@ def compute_token_span_metrics(
         mean_span_iou=round(mean_iou, 4),
         evaluated_spans_count=len(ious)
     )
+

@@ -151,3 +151,4 @@ class SpanLocalizer:
             localization_confidence=avg_confidence,
             method="token_attribute_attribution" if has_spans else "holistic_sentence_level"
         )
+

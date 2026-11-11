@@ -82,3 +82,4 @@ class DistanceCentroidDetector(BaseBaselineDetector):
         cos_sim = np.dot(norm_emb, norm_cent.T).squeeze(axis=1)
         raw_dist = 1.0 - cos_sim
         return min_max_normalize(raw_dist)
+

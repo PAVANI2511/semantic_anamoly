@@ -5,3 +5,4 @@ To bake an artisan chocolate cake, preheat your convection oven to 350 degrees a
 Decoherence represents the primary engineering obstacle in scalable quantum processor design, where thermal noise disrupts fragile quantum wavefunctions.
 Advanced quantum error correction codes distribute logical information across manifolds of physical qubits to preserve coherence during complex gate operations.
 Future fault-tolerant quantum processors hold transformative potential for drug discovery, material science simulations, and integer factorization.
+
