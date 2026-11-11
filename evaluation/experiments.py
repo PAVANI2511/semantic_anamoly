@@ -6,7 +6,7 @@ Research experimentation harness:
 - Category-wise error analysis
 """
 
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 import pandas as pd
 import numpy as np
 
@@ -148,3 +148,4 @@ class ExperimentHarness:
             "TN": m.tn,
             "FN": m.fn
         }
+
