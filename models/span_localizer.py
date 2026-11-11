@@ -1,11 +1,12 @@
 """
 Module 7: Anomaly Span Localization.
 Pinpoints specific anomalous words or phrases within flagged sentences
-using token-level contextual divergence and polarity attribution.
+using token-level contextual divergence, entity identification, and NLI contradiction pivots.
+Preserves exact original character offsets across multiline and Unicode text.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Tuple, Set
 import re
 import numpy as np
 
@@ -22,6 +23,7 @@ class LocalizedSpan:
     end_char: int
     salience_score: float
     reason: str
+    method: str = "token_saliency"
 
 
 @dataclass
@@ -37,17 +39,18 @@ class SentenceLocalizationResult:
 class SpanLocalizer:
     """
     Localizes anomalous spans within sentences flagged by DGSA.
-    Discloses when localization is holistic (sentence-level only) vs token-level.
+    Clearly distinguishes token-level localization from holistic sentence-level detection.
     """
 
     STOPWORDS = {
         "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "with",
         "by", "about", "against", "between", "into", "through", "during", "before",
         "after", "above", "below", "from", "up", "down", "is", "are", "was", "were",
-        "be", "been", "being", "have", "has", "had", "do", "does", "did", "of"
+        "be", "been", "being", "have", "has", "had", "do", "does", "did", "of",
+        "this", "that", "these", "those", "it", "its", "as", "if", "each", "both"
     }
 
-    def __init__(self, min_token_salience: float = 0.55):
+    def __init__(self, min_token_salience: float = 0.50):
         self.min_token_salience = min_token_salience
 
     def localize_spans(
@@ -55,13 +58,15 @@ class SpanLocalizer:
         sentence: SentenceItem,
         anomaly_category: str,
         anomaly_score: float,
-        global_context_tokens: Optional[set] = None,
-        contradiction_details: Optional[Dict[str, Any]] = None
+        is_anomalous: bool = True,
+        global_context_tokens: Optional[Set[str]] = None,
+        contradiction_details: Optional[Dict[str, Any]] = None,
+        embedding_model: Optional[Any] = None
     ) -> SentenceLocalizationResult:
         """
-        Extracts salient token spans contributing to the anomaly.
+        Extracts salient token/phrase spans contributing to the anomaly.
         """
-        if not sentence.tokens or anomaly_score < 0.30:
+        if not is_anomalous or not sentence.tokens or anomaly_score < 0.35:
             return SentenceLocalizationResult(
                 sentence_id=sentence.sentence_id,
                 has_token_spans=False,
@@ -72,51 +77,65 @@ class SpanLocalizer:
 
         detected_spans: List[LocalizedSpan] = []
 
-        # 1. Contradiction Localization: Locate polarity flips or antonym triggers
+        # 1. Contradiction Localization: Locate polarity flips, opposing terms, or negation markers
         if anomaly_category == AnomalyCategories.CONTRADICTION and contradiction_details:
             reasons = contradiction_details.get("reasons", [])
             for r in reasons:
-                # Extract quoted terms if any: e.g. "'increase' vs 'decrease'"
+                # Extract quoted terms if any
                 quoted = re.findall(r"'([^']+)'", r)
                 for q in quoted:
                     for t_span in sentence.token_spans:
-                        if t_span.text.lower() == q.lower():
+                        if t_span.text.lower().startswith(q.lower()) or q.lower() in t_span.text.lower():
                             detected_spans.append(LocalizedSpan(
                                 text=t_span.text,
                                 start_char=t_span.start_char,
                                 end_char=t_span.end_char,
-                                salience_score=0.90,
-                                reason=f"Contradiction polarity pivot ({q})"
+                                salience_score=0.92,
+                                reason=f"Contradiction polarity pivot: '{q}'",
+                                method="nli_contradiction_pivot"
                             ))
 
             # Check negation terms
             for t_span in sentence.token_spans:
-                if t_span.text.lower() in {"not", "never", "no", "cannot", "n't"}:
+                if t_span.text.lower() in {"not", "never", "no", "cannot", "n't", "neither", "nor"}:
                     detected_spans.append(LocalizedSpan(
                         text=t_span.text,
                         start_char=t_span.start_char,
                         end_char=t_span.end_char,
-                        salience_score=0.85,
-                        reason="Negation inversion marker"
+                        salience_score=0.88,
+                        reason="Negation inversion marker",
+                        method="negation_attribution"
                     ))
 
-        # 2. Entity / Attribute Inconsistency: Locate unknown named entities
+        # 2. Entity / Attribute Inconsistency: Locate unshared named entities
         elif anomaly_category in {AnomalyCategories.ENTITY_INCONSISTENCY, AnomalyCategories.ATTRIBUTE_INCONSISTENCY}:
             for t_span in sentence.token_spans:
-                # Capitalized tokens that are not stopwords and not sentence-initial common words
                 tok = t_span.text
-                if tok[0].isupper() and tok.lower() not in self.STOPWORDS and len(tok) > 2:
+                if tok and tok[0].isupper() and tok.lower() not in self.STOPWORDS and len(tok) > 2:
                     if global_context_tokens and tok.lower() not in global_context_tokens:
                         detected_spans.append(LocalizedSpan(
                             text=tok,
                             start_char=t_span.start_char,
                             end_char=t_span.end_char,
-                            salience_score=0.80,
-                            reason="Unprecedented entity or out-of-domain proper noun"
+                            salience_score=0.85,
+                            reason="Unprecedented out-of-domain named entity",
+                            method="entity_novelty_attribution"
                         ))
 
-        # 3. Topic Deviation: Find tokens with zero or lowest overlap with global domain vocabulary
-        elif anomaly_category == AnomalyCategories.TOPIC_DEVIATION and global_context_tokens:
+            # Check attribute keywords (adjectives/numbers)
+            numeric_spans = [s for s in sentence.token_spans if re.match(r'^\d+(?:\.\d+)?%?$', s.text)]
+            for num_sp in numeric_spans:
+                detected_spans.append(LocalizedSpan(
+                    text=num_sp.text,
+                    start_char=num_sp.start_char,
+                    end_char=num_sp.end_char,
+                    salience_score=0.75,
+                    reason="Numerical attribute candidate",
+                    method="numerical_attribute_attribution"
+                ))
+
+        # 3. Topic Deviation & Context Inconsistency: Find tokens with zero overlap with document context
+        if (anomaly_category in {AnomalyCategories.TOPIC_DEVIATION, AnomalyCategories.CONTEXTUAL_INCONSISTENCY, AnomalyCategories.ATTRIBUTE_INCONSISTENCY} or not detected_spans) and global_context_tokens:
             content_spans = [
                 s for s in sentence.token_spans
                 if len(s.text) > 3 and s.text.lower() not in self.STOPWORDS and s.text.isalpha()
@@ -127,28 +146,65 @@ class SpanLocalizer:
                         text=s.text,
                         start_char=s.start_char,
                         end_char=s.end_char,
-                        salience_score=0.75,
-                        reason="Lexical topic outlier"
+                        salience_score=0.82,
+                        reason="Topical / contextual vocabulary outlier",
+                        method="lexical_divergence_attribution"
                     ))
 
-        # Merge overlapping or duplicate spans
-        unique_spans: List[LocalizedSpan] = []
-        seen_ranges = set()
-        for span in detected_spans:
-            rng = (span.start_char, span.end_char)
-            if rng not in seen_ranges:
-                seen_ranges.add(rng)
-                unique_spans.append(span)
+        # Merge adjacent spans into coherent multi-token phrase spans
+        merged_spans = self._merge_adjacent_spans(detected_spans, sentence.text, sentence.start_char)
 
-        # Clear distinction between token-level and sentence-level
-        has_spans = len(unique_spans) > 0
-        avg_confidence = float(np.mean([s.salience_score for s in unique_spans])) if has_spans else 0.0
+        has_spans = len(merged_spans) > 0
+        avg_confidence = float(np.mean([s.salience_score for s in merged_spans])) if has_spans else 0.0
 
         return SentenceLocalizationResult(
             sentence_id=sentence.sentence_id,
             has_token_spans=has_spans,
-            spans=unique_spans,
-            localization_confidence=avg_confidence,
-            method="token_attribute_attribution" if has_spans else "holistic_sentence_level"
+            spans=merged_spans,
+            localization_confidence=round(avg_confidence, 3),
+            method=merged_spans[0].method if has_spans else "holistic_sentence_level"
         )
 
+    def _merge_adjacent_spans(
+        self,
+        spans: List[LocalizedSpan],
+        sentence_text: str,
+        sentence_start_char: int = 0
+    ) -> List[LocalizedSpan]:
+        """Merges contiguous or adjacent single-token spans into phrase spans."""
+        if not spans:
+            return []
+
+        # Deduplicate and sort by start_char
+        unique_map = {}
+        for sp in spans:
+            key = (sp.start_char, sp.end_char)
+            if key not in unique_map or sp.salience_score > unique_map[key].salience_score:
+                unique_map[key] = sp
+
+        sorted_spans = sorted(unique_map.values(), key=lambda s: s.start_char)
+        merged: List[LocalizedSpan] = []
+
+        curr = sorted_spans[0]
+        for nxt in sorted_spans[1:]:
+            rel_curr_end = max(0, curr.end_char - sentence_start_char)
+            rel_nxt_start = max(0, nxt.start_char - sentence_start_char)
+            rel_curr_start = max(0, curr.start_char - sentence_start_char)
+            rel_nxt_end = max(0, nxt.end_char - sentence_start_char)
+
+            gap = sentence_text[rel_curr_end:rel_nxt_start]
+            if len(gap) <= 2 and all(c in " -_/\t" for c in gap):
+                combined_text = sentence_text[rel_curr_start:rel_nxt_end]
+                curr = LocalizedSpan(
+                    text=combined_text if combined_text else (curr.text + gap + nxt.text),
+                    start_char=curr.start_char,
+                    end_char=nxt.end_char,
+                    salience_score=max(curr.salience_score, nxt.salience_score),
+                    reason=curr.reason,
+                    method=curr.method
+                )
+            else:
+                merged.append(curr)
+                curr = nxt
+        merged.append(curr)
+        return merged

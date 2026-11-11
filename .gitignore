@@ -43,6 +43,7 @@ models_cache/
 outputs/reports/*.pdf
 outputs/reports/*.csv
 outputs/reports/*.json
+outputs/test_exports/
 
 # IDE & OS
 .vscode/

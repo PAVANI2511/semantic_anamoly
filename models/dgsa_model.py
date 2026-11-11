@@ -88,6 +88,7 @@ class DGSAModel:
     ) -> DGSAResult:
         """
         Executes end-to-end DGSA pipeline on document text.
+        Guarantees zero side-effect mutation of model configuration across runs.
         """
         start_time = time.perf_counter()
 
@@ -96,11 +97,18 @@ class DGSAModel:
         if not sentences:
             return self._empty_result(text)
 
-        threshold = custom_threshold if custom_threshold is not None else self.scorer.threshold
-        if custom_weights:
-            self.scorer.alpha = custom_weights.get("alpha", self.scorer.alpha)
-            self.scorer.beta = custom_weights.get("beta", self.scorer.beta)
-            self.scorer.gamma = custom_weights.get("gamma", self.scorer.gamma)
+        # Non-mutating run-specific parameters
+        alpha = custom_weights.get("alpha", self.params.alpha) if custom_weights else self.params.alpha
+        beta = custom_weights.get("beta", self.params.beta) if custom_weights else self.params.beta
+        gamma = custom_weights.get("gamma", self.params.gamma) if custom_weights else self.params.gamma
+        threshold = custom_threshold if custom_threshold is not None else self.params.anomaly_threshold
+
+        run_scorer = DGSAScorer(
+            alpha=alpha,
+            beta=beta,
+            gamma=gamma,
+            threshold=threshold
+        )
 
         # Step 2: Semantic Representation
         sentence_texts = [s.cleaned_text for s in sentences]
@@ -122,7 +130,7 @@ class DGSAModel:
         )
 
         # Step 6: Dual-Level Composite Anomaly Scoring A(i)
-        composite_scores, eff_alpha, eff_beta, eff_gamma = self.scorer.compute_composite_scores(
+        composite_scores, eff_alpha, eff_beta, eff_gamma = run_scorer.compute_composite_scores(
             norm_global, norm_local, norm_contra,
             enable_global=enable_global,
             enable_local=enable_local,
@@ -135,32 +143,39 @@ class DGSAModel:
         categories: List[str] = []
         explanations: List[AnomalyExplanation] = []
 
-        # Create global vocabulary bag for span outlier matching
-        all_words = set()
-        for s in sentences:
-            all_words.update(w.lower() for w in s.tokens if len(w) > 3)
+        # Precompute vocabulary sets excluding target sentence for outlier localization
+        doc_word_sets = [
+            set(w.lower() for w in s.tokens if len(w) > 3)
+            for s in sentences
+        ]
 
         for i in range(num_sentences):
             score = float(composite_scores[i])
             flagged = score >= threshold
             is_anomaly.append(flagged)
 
-            # Infer category
-            cat = self.scorer.classify_category(
-                float(norm_global[i]),
-                float(norm_local[i]),
-                float(norm_contra[i]),
-                local_details[i],
-                contra_details[i]
+            # Infer evidence-grounded category
+            cat_result = run_scorer.classify_category(
+                is_anomalous=flagged,
+                global_score=float(norm_global[i]),
+                local_score=float(norm_local[i]),
+                contradiction_score=float(norm_contra[i]),
+                local_detail=local_details[i],
+                contradiction_detail=contra_details[i]
             )
+            cat = cat_result.primary_category
             categories.append(cat)
 
-            # Localize spans
+            # Global context tokens from all other sentences in the document
+            other_words = set().union(*(ws for j, ws in enumerate(doc_word_sets) if j != i))
+
+            # Localize spans with token/phrase attribution
             loc_result = self.span_localizer.localize_spans(
                 sentence=sentences[i],
                 anomaly_category=cat,
                 anomaly_score=score,
-                global_context_tokens=all_words,
+                is_anomalous=flagged,
+                global_context_tokens=other_words,
                 contradiction_details=contra_details[i]
             )
 

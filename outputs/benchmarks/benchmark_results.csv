@@ -1,0 +1,7 @@
+Model,Accuracy,Precision,Recall,F1-Score,ROC-AUC,PR-AUC,Latency (ms),Latency/Sent (ms),TP,FP,TN,FN
+TF-IDF + Isolation Forest,0.9091,0.0,0.0,0.0,0.5,0.5455,192.66,8.757,0,0,20,2
+S-BERT + Isolation Forest,0.2273,0.0588,0.5,0.1053,0.275,0.0603,174.19,7.918,1,16,4,1
+S-BERT + One-Class SVM,0.0909,0.0909,1.0,0.1667,0.5,0.5455,6.82,0.31,2,20,0,0
+Supervised Logistic Regression,0.9545,1.0,0.5,0.6667,0.9,0.6333,10.81,0.491,1,0,20,1
+DGSA without NLI (Lexical Fallback),0.9545,1.0,0.5,0.6667,1.0,1.0,938.35,42.652,1,0,20,1
+DGSA Full Framework (Proposed),0.8636,0.4,1.0,0.5714,1.0,1.0,3775.48,171.613,2,3,17,0

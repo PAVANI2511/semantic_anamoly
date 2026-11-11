@@ -298,7 +298,7 @@ if nav_option == "📄 Document Analysis & Audit":
 
         # Quick Export Options
         st.markdown("#### 📥 **Export Results**")
-        exp_col1, exp_col2, exp_col3 = st.columns(3)
+        exp_col1, exp_col2, exp_col3, exp_col4 = st.columns(4)
         with exp_col1:
             json_str = json.dumps({
                 "document": st.session_state["document_name"],
@@ -322,6 +322,11 @@ if nav_option == "📄 Document Analysis & Audit":
             html_rep = ExportManager.export_to_html_report(res, "outputs/reports/current_report.html")
             with open(html_rep, "r", encoding="utf-8") as f:
                 st.download_button("Download Executive HTML", data=f.read(), file_name="semantic_sentinel_report.html", mime="text/html")
+
+        with exp_col4:
+            pdf_rep = ExportManager.export_to_pdf(res, "outputs/reports/current_report.pdf")
+            with open(pdf_rep, "rb") as f:
+                st.download_button("Download PDF Audit (ReportLab)", data=f.read(), file_name="semantic_sentinel_report.pdf", mime="application/pdf")
 
 
 # =========================================================================
@@ -413,48 +418,71 @@ elif nav_option == "📑 Detailed Sentence Audit":
 # =========================================================================
 elif nav_option == "🔬 Research Benchmarks & Baselines":
     st.markdown('<div class="main-header">Scientific Evaluation & Baseline Benchmarks</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-header">Comparative evaluation against Isolation Forest, One-Class SVM, and supervised classifiers.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header">Rigorous zero-leakage evaluation against Isolation Forest, One-Class SVM, and Logistic Regression.</div>', unsafe_allow_html=True)
 
-    benchmark_path = Path("data/datasets/synthetic_benchmark.json")
-    if not benchmark_path.exists():
-        st.error("Benchmark dataset not found.")
-    else:
-        docs = DatasetLoader.load_from_json(benchmark_path)
-        all_texts, all_labels, all_cats = DatasetLoader.flatten_sentences(docs)
+    benchmark_dir = Path("outputs/benchmarks")
+    bench_csv = benchmark_dir / "benchmark_results.csv"
+    abl_csv = benchmark_dir / "ablation_results.csv"
+    span_csv = benchmark_dir / "span_evaluation_results.csv"
 
-        st.info(f"Loaded Controlled Research Benchmark: {len(docs)} Documents, {len(all_texts)} Sentences ({sum(all_labels)} Anomalies).")
+    st.markdown("### 🏆 **Empirical Research Benchmark (Zero-Leakage Document Split)**")
+    st.caption("Documents partitioned strictly across 50% Train, 25% Validation (threshold tuning), and 25% Test (held-out evaluation). Zero sentence leakage across partitions.")
 
-        run_bench_btn = st.button("⚡ Execute Comparative Benchmark Across All Models", type="primary")
+    # Re-run button
+    run_rigorous_btn = st.button("⚡ Re-Run Zero-Leakage Benchmark Across All 6 Models", type="primary")
 
-        if run_bench_btn:
-            with st.spinner("Running Baselines (TF-IDF + IF, S-BERT + IF, S-BERT + OCSVM, DGSA Full)..."):
-                harness = ExperimentHarness(dgsa_model=dgsa_engine)
-                bench_df = harness.run_comparative_benchmark(all_texts, all_labels)
-                st.session_state["benchmark_df"] = bench_df
+    if run_rigorous_btn:
+        with st.spinner("Executing rigorous Train/Val/Test benchmark with DeBERTa NLI and Baselines..."):
+            data_file = Path("data/datasets/research_benchmark.json")
+            if not data_file.exists():
+                data_file = Path("data/datasets/synthetic_benchmark.json")
+            all_docs = DatasetLoader.load_from_json(data_file)
+            tr, val, ts = DatasetLoader.split_train_val_test(all_docs, 0.5, 0.25, 0.25, random_seed=42)
+            harness = ExperimentHarness(dgsa_engine)
+            res_dict = harness.run_rigorous_benchmark(tr, val, ts)
+            st.session_state["benchmark_df"] = res_dict["benchmark_results"]
+            st.session_state["ablation_df"] = res_dict["ablation_results"]
+            st.session_state["span_metrics"] = res_dict["span_metrics"]
 
-        if "benchmark_df" in st.session_state:
-            df = st.session_state["benchmark_df"]
-            st.markdown("#### **Comparative Performance Table**")
-            st.dataframe(df[["Model", "Accuracy", "Precision", "Recall", "F1-Score", "ROC-AUC", "Latency (ms)"]], use_container_width=True)
+    # Load from disk if not in session state
+    if "benchmark_df" not in st.session_state and bench_csv.exists():
+        st.session_state["benchmark_df"] = pd.read_csv(bench_csv)
+    if "ablation_df" not in st.session_state and abl_csv.exists():
+        st.session_state["ablation_df"] = pd.read_csv(abl_csv)
+    if "span_metrics_df" not in st.session_state and span_csv.exists():
+        st.session_state["span_metrics_df"] = pd.read_csv(span_csv)
 
-            # Bar chart
-            fig_bench = create_baseline_comparison_chart(df)
-            st.plotly_chart(fig_bench, use_container_width=True)
+    if "benchmark_df" in st.session_state:
+        df = st.session_state["benchmark_df"]
+        st.markdown("#### **1. Comparative Benchmark Performance (Held-Out Test Set)**")
+        st.dataframe(df[["Model", "Accuracy", "Precision", "Recall", "F1-Score", "ROC-AUC", "Latency (ms)"]], use_container_width=True)
 
-            # Confusion Matrix for DGSA
-            dgsa_row = df[df["Model"].str.contains("DGSA")].iloc[0]
-            cm = [[int(dgsa_row["TN"]), int(dgsa_row["FP"])], [int(dgsa_row["FN"]), int(dgsa_row["TP"])]]
-            col_cm, col_abl = st.columns(2)
-            with col_cm:
+        fig_bench = create_baseline_comparison_chart(df)
+        st.plotly_chart(fig_bench, use_container_width=True)
+
+        col_left, col_right = st.columns(2)
+        with col_left:
+            st.markdown("#### **2. Span Localization Metrics (Fine-Grained Attribution)**")
+            if "span_metrics_df" in st.session_state:
+                sp_df = st.session_state["span_metrics_df"]
+                st.dataframe(sp_df, use_container_width=True)
+            elif "span_metrics" in st.session_state:
+                sp_obj = st.session_state["span_metrics"]
+                st.dataframe(pd.DataFrame([sp_obj.to_dict()]), use_container_width=True)
+
+        with col_right:
+            st.markdown("#### **3. DGSA Confusion Matrix (Test Split)**")
+            dgsa_matches = df[df["Model"].str.contains("DGSA Full|DGSA Framework")]
+            if not dgsa_matches.empty:
+                dgsa_row = dgsa_matches.iloc[0]
+                cm = [[int(dgsa_row["TN"]), int(dgsa_row["FP"])], [int(dgsa_row["FN"]), int(dgsa_row["TP"])]]
                 fig_cm = create_confusion_matrix_heatmap(cm)
                 st.plotly_chart(fig_cm, use_container_width=True)
 
-            with col_abl:
-                st.markdown("#### **Ablation Study Breakdown**")
-                st.caption("Evaluating impact of removing individual signals.")
-                harness = ExperimentHarness(dgsa_model=dgsa_engine)
-                abl_df = harness.run_ablation_study(" ".join(all_texts), all_labels)
-                st.dataframe(abl_df[["Model", "F1-Score", "Precision", "Recall", "Accuracy"]], use_container_width=True)
+        st.markdown("#### **4. Full Signal Ablation Study (7 Component Configurations)**")
+        st.caption("Evaluating empirical impact of individual contextual signals G(i), L(i), C(i) on test documents.")
+        if "ablation_df" in st.session_state:
+            st.dataframe(st.session_state["ablation_df"][["Model", "Accuracy", "Precision", "Recall", "F1-Score", "ROC-AUC"]], use_container_width=True)
 
 
 # =========================================================================

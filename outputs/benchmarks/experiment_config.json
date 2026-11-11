@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-11-11 11:48:07",
+  "embedding_model": "sentence-transformers/all-mpnet-base-v2",
+  "nli_model": "cross-encoder/nli-deberta-v3-xsmall",
+  "contradiction_backend": "nli_transformer",
+  "train_doc_ids": [
+    "DOC_08",
+    "DOC_06",
+    "DOC_03",
+    "DOC_09",
+    "DOC_10",
+    "DOC_07"
+  ],
+  "val_doc_ids": [
+    "DOC_12",
+    "DOC_04",
+    "DOC_05"
+  ],
+  "test_doc_ids": [
+    "DOC_01",
+    "DOC_02",
+    "DOC_11"
+  ],
+  "calibrated_threshold": 0.55,
+  "dgsa_weights": {
+    "alpha": 0.4,
+    "beta": 0.35,
+    "gamma": 0.25
+  }
+}
