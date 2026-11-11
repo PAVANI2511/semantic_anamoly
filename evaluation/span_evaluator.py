@@ -235,3 +235,4 @@ class SpanEvaluator:
             total_predicted_spans=total_pred,
             category_metrics=cat_metrics
         )
+

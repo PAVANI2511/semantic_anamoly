@@ -236,3 +236,4 @@ df = pd.DataFrame(rows)
 df.to_csv("data/datasets/research_benchmark.csv", index=False)
 df.to_csv("data/datasets/synthetic_benchmark.csv", index=False)
 print(f"Saved CSV with {len(df)} total sentences ({df['is_anomaly'].sum()} anomalies).")
+
