@@ -28,12 +28,27 @@ class TestNLIContradiction(unittest.TestCase):
     def test_dynamic_backend_switching(self):
         detector = ContradictionDetector(use_nli=False)
         self.assertEqual(detector.backend, "lexical_fallback")
+        self.assertFalse(detector.use_nli)
 
+        # Request NLI backend
+        detector.backend = "nli_transformer"
+        self.assertTrue(detector.use_nli)
+        # If sentence_transformers is installed and model loads, backend is 'nli_transformer';
+        # otherwise, detector correctly remains on 'lexical_fallback'
+        expected_backend = "nli_transformer" if detector.is_nli_active else "lexical_fallback"
+        self.assertEqual(detector.backend, expected_backend)
+
+        # When an active model instance is present, backend resolves to 'nli_transformer'
+        detector._nli_model = object()
+        detector.is_nli_active = True
         detector.backend = "nli_transformer"
         self.assertEqual(detector.backend, "nli_transformer")
 
+        # Explicitly switch back to lexical fallback
         detector.backend = "lexical_fallback"
         self.assertEqual(detector.backend, "lexical_fallback")
+        self.assertFalse(detector.use_nli)
+        self.assertFalse(detector.is_nli_active)
 
     def test_lexical_polarity_contradiction(self):
         sent_a = "The operating profit increased by twenty percent."
