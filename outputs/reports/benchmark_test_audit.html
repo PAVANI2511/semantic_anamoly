@@ -23,14 +23,14 @@
 <body>
     <h1>Semantic Sentinel Analysis Report</h1>
     <div class="summary-box">
-        <h3>Executive Assessment: Mild Inconsistencies: Document is mostly coherent with minor deviations.</h3>
-        <p><b>Embedding Model:</b> sentence-transformers/all-mpnet-base-v2 | <b>Threshold:</b> 0.55 | <b>Latency:</b> 1444.59 ms</p>
+        <h3>Executive Assessment: Moderate Anomaly Density: Notable topical or contextual fractures observed.</h3>
+        <p><b>Embedding Model:</b> sentence-transformers/all-mpnet-base-v2 | <b>Threshold:</b> 0.5 | <b>Latency:</b> 1039.75 ms</p>
         <p><b>DGSA Formula:</b> A(i) = 0.40&middot;G(i) + 0.35&middot;L(i) + 0.25&middot;C(i)</p>
         <div class="grid">
-            <div class="metric-card"><div class="metric-val">8</div><div class="metric-lbl">Total Sentences</div></div>
-            <div class="metric-card"><div class="metric-val">1</div><div class="metric-lbl">Anomalies Detected</div></div>
-            <div class="metric-card"><div class="metric-val">12.5%</div><div class="metric-lbl">Anomaly Rate</div></div>
-            <div class="metric-card"><div class="metric-val">7</div><div class="metric-lbl">Normal Sentences</div></div>
+            <div class="metric-card"><div class="metric-val">7</div><div class="metric-lbl">Total Sentences</div></div>
+            <div class="metric-card"><div class="metric-val">2</div><div class="metric-lbl">Anomalies Detected</div></div>
+            <div class="metric-card"><div class="metric-val">28.57%</div><div class="metric-lbl">Anomaly Rate</div></div>
+            <div class="metric-card"><div class="metric-val">5</div><div class="metric-lbl">Normal Sentences</div></div>
         </div>
     </div>
 
@@ -50,74 +50,65 @@
             
             <tr class="">
                 <td><b>#1</b></td>
-                <td>Global climate change represents one of the most pressing challenges confronting modern civilization.</td>
+                <td>Apex Technologies recorded extraordinary commercial performance throughout the third fiscal quarter of 2026.</td>
                 <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.272</b></td>
+                <td><b>0.380</b></td>
                 <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.27).</small></td>
+                <td><small>Sentence conforms to document semantics (Score: 0.38).</small></td>
             </tr>
             
             <tr class="">
                 <td><b>#2</b></td>
-                <td>Rising concentrations of atmospheric greenhouse gases have trapped excess thermal energy within the Earth&#x27;s planetary systems.</td>
+                <td>Total enterprise revenues increased by 38 percent year-over-year, propelled by enterprise adoption of cloud analytics solutions.</td>
                 <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.299</b></td>
+                <td><b>0.338</b></td>
                 <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.30).</small></td>
+                <td><small>Sentence conforms to document semantics (Score: 0.34).</small></td>
             </tr>
             
-            <tr class="table-warning">
+            <tr class="">
                 <td><b>#3</b></td>
-                <td>Scientific observations collected across satellite arrays confirm widespread retreats of polar ice sheets and mountain glaciers.<br><small style='color: #c53030;'><b>Attributed Spans:</b> <code>Scientific observations collected</code>, <code>satellite arrays confirm widespread retreats</code>, <code>polar</code>, <code>sheets</code>, <code>mountain glaciers</code></small></td>
-                <td><span class="badge-danger">ANOMALY</span></td>
-                <td><b>0.601</b></td>
-                <td>Contradiction</td>
-                <td><small>Model detected direct semantic conflict with sentence #2: NLI Cross-Encoder detected contradiction with sentence #2 (Probability: 95.5%).</small></td>
+                <td>Gross operating profit margins expanded across all geographic operating sectors due to rigorous supply chain efficiencies.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.371</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.37).</small></td>
             </tr>
             
             <tr class="">
                 <td><b>#4</b></td>
-                <td>Average surface temperatures across both continental and oceanic zones have steadily escalated over the preceding century.</td>
+                <td>Operating cash flows reached record liquidity levels, empowering the company to fund ambitious research and development initiatives.</td>
                 <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.296</b></td>
+                <td><b>0.364</b></td>
                 <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.30).</small></td>
+                <td><small>Sentence conforms to document semantics (Score: 0.36).</small></td>
             </tr>
             
-            <tr class="">
+            <tr class="table-warning">
                 <td><b>#5</b></td>
-                <td>Ocean acidification has accelerated as marine waters absorb substantial quantities of anthropogenic carbon dioxide emissions.</td>
-                <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.401</b></td>
-                <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.40).</small></td>
+                <td>The company experienced total financial failure with overall enterprise revenues that decreased drastically by 40 percent during the exact same period.<br><small style='color: #c53030;'><b>Attributed Spans:</b> <code>experienced</code>, <code>financial failure</code>, <code>overall</code></small></td>
+                <td><span class="badge-danger">ANOMALY</span></td>
+                <td><b>0.790</b></td>
+                <td>Contextual Inconsistency</td>
+                <td><small>Local contextual inconsistency is prominent (L=0.95), indicating low semantic similarity to immediate neighboring sentences.</small></td>
             </tr>
             
             <tr class="">
                 <td><b>#6</b></td>
-                <td>These systemic environmental perturbations trigger shifts in meteorological precipitation patterns and heighten the frequency of severe weather events.</td>
+                <td>Executive leadership announced an enhanced dividend payout schedule reflecting robust confidence in sustained multi-year balance sheet momentum.</td>
                 <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.355</b></td>
+                <td><b>0.439</b></td>
                 <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.35).</small></td>
+                <td><small>Sentence conforms to document semantics (Score: 0.44).</small></td>
             </tr>
             
-            <tr class="">
+            <tr class="table-warning">
                 <td><b>#7</b></td>
-                <td>Mitigating these multifaceted ecological impacts necessitates international policy cooperation and rapid transition towards renewable energy matrices.</td>
-                <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.323</b></td>
-                <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.32).</small></td>
-            </tr>
-            
-            <tr class="">
-                <td><b>#8</b></td>
-                <td>Comprehensive decarbonization strategies across energy, transport, and agricultural sectors are imperative to preserve planetary homeostasis.</td>
-                <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.313</b></td>
-                <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.31).</small></td>
+                <td>Customer retention metrics among Fortune 500 accounts remained at an exceptional 99 percent compliance rate.<br><small style='color: #c53030;'><b>Attributed Spans:</b> <code>Customer</code>, <code>Fortune</code></small></td>
+                <td><span class="badge-danger">ANOMALY</span></td>
+                <td><b>0.527</b></td>
+                <td>Entity Inconsistency</td>
+                <td><small>Contains novel or unlinked entities: Fortune.</small></td>
             </tr>
             
         </tbody>

@@ -1,2 +1,2 @@
-token_precision,token_recall,token_f1,exact_match_count,exact_match_rate,partial_match_count,partial_match_rate,mean_iou,median_iou,total_gold_spans,total_pred_spans
-0.0786,1.0,0.1457,1,0.1667,6,1.0,0.3591,0.2105,6,25
+avg_token_precision,avg_token_recall,avg_token_f1,avg_token_iou,avg_exact_match_ratio,num_seeds
+0.217,0.283,0.2415,0.2238,0.131,3

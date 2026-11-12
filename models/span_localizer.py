@@ -47,7 +47,10 @@ class SpanLocalizer:
         "by", "about", "against", "between", "into", "through", "during", "before",
         "after", "above", "below", "from", "up", "down", "is", "are", "was", "were",
         "be", "been", "being", "have", "has", "had", "do", "does", "did", "of",
-        "this", "that", "these", "those", "it", "its", "as", "if", "each", "both"
+        "this", "that", "these", "those", "it", "its", "as", "if", "each", "both",
+        "your", "my", "our", "their", "more", "most", "some", "such", "than", "too",
+        "very", "can", "will", "just", "should", "now", "then", "which", "who", "whom",
+        "where", "when", "why", "how", "all", "any", "other", "also", "well", "there"
     }
 
     def __init__(self, min_token_salience: float = 0.50):
@@ -65,6 +68,7 @@ class SpanLocalizer:
     ) -> SentenceLocalizationResult:
         """
         Extracts salient token/phrase spans contributing to the anomaly.
+        Employs targeted attribution to preserve high token precision and exact boundary matching.
         """
         if not is_anomalous or not sentence.tokens or anomaly_score < 0.35:
             return SentenceLocalizationResult(
@@ -81,7 +85,6 @@ class SpanLocalizer:
         if anomaly_category == AnomalyCategories.CONTRADICTION and contradiction_details:
             reasons = contradiction_details.get("reasons", [])
             for r in reasons:
-                # Extract quoted terms if any
                 quoted = re.findall(r"'([^']+)'", r)
                 for q in quoted:
                     for t_span in sentence.token_spans:
@@ -107,8 +110,8 @@ class SpanLocalizer:
                         method="negation_attribution"
                     ))
 
-        # 2. Entity / Attribute Inconsistency: Locate unshared named entities
-        elif anomaly_category in {AnomalyCategories.ENTITY_INCONSISTENCY, AnomalyCategories.ATTRIBUTE_INCONSISTENCY}:
+        # 2. Entity Inconsistency: Locate unshared named entities (multi-token proper nouns)
+        elif anomaly_category == AnomalyCategories.ENTITY_INCONSISTENCY:
             for t_span in sentence.token_spans:
                 tok = t_span.text
                 if tok and tok[0].isupper() and tok.lower() not in self.STOPWORDS and len(tok) > 2:
@@ -117,39 +120,79 @@ class SpanLocalizer:
                             text=tok,
                             start_char=t_span.start_char,
                             end_char=t_span.end_char,
-                            salience_score=0.85,
+                            salience_score=0.90,
                             reason="Unprecedented out-of-domain named entity",
                             method="entity_novelty_attribution"
                         ))
 
-            # Check attribute keywords (adjectives/numbers)
-            numeric_spans = [s for s in sentence.token_spans if re.match(r'^\d+(?:\.\d+)?%?$', s.text)]
-            for num_sp in numeric_spans:
-                detected_spans.append(LocalizedSpan(
-                    text=num_sp.text,
-                    start_char=num_sp.start_char,
-                    end_char=num_sp.end_char,
-                    salience_score=0.75,
-                    reason="Numerical attribute candidate",
-                    method="numerical_attribute_attribution"
-                ))
+        # 3. Attribute / Numerical / Temporal Inconsistency: Target numbers, dates, and conflicting descriptors
+        elif anomaly_category in {
+            AnomalyCategories.ATTRIBUTE_INCONSISTENCY,
+            AnomalyCategories.NUMERICAL_INCONSISTENCY,
+            AnomalyCategories.TEMPORAL_INCONSISTENCY
+        }:
+            # Find numbers and percentages
+            for t_span in sentence.token_spans:
+                if re.match(r'^\d+(?:\.\d+)?%?$', t_span.text) or t_span.text.lower() in {"midnight", "noon", "zero", "hundred"}:
+                    detected_spans.append(LocalizedSpan(
+                        text=t_span.text,
+                        start_char=t_span.start_char,
+                        end_char=t_span.end_char,
+                        salience_score=0.85,
+                        reason="Numerical/temporal attribute conflict",
+                        method="numerical_attribute_attribution"
+                    ))
 
-        # 3. Topic Deviation & Context Inconsistency: Find tokens with zero overlap with document context
-        if (anomaly_category in {AnomalyCategories.TOPIC_DEVIATION, AnomalyCategories.CONTEXTUAL_INCONSISTENCY, AnomalyCategories.ATTRIBUTE_INCONSISTENCY} or not detected_spans) and global_context_tokens:
-            content_spans = [
+            # Specific attribute tokens not present in document context
+            attr_spans = [
                 s for s in sentence.token_spans
                 if len(s.text) > 3 and s.text.lower() not in self.STOPWORDS and s.text.isalpha()
             ]
-            for s in content_spans:
-                if s.text.lower() not in global_context_tokens:
+            for s in attr_spans:
+                if global_context_tokens and s.text.lower() not in global_context_tokens:
                     detected_spans.append(LocalizedSpan(
                         text=s.text,
                         start_char=s.start_char,
                         end_char=s.end_char,
-                        salience_score=0.82,
-                        reason="Topical / contextual vocabulary outlier",
-                        method="lexical_divergence_attribution"
+                        salience_score=0.80,
+                        reason="Attribute divergence candidate",
+                        method="attribute_divergence_attribution"
                     ))
+
+        # 4. Topic Deviation & Context Inconsistency: Target top content keyword outliers
+        elif anomaly_category in {AnomalyCategories.TOPIC_DEVIATION, AnomalyCategories.CONTEXTUAL_INCONSISTENCY} and global_context_tokens:
+            content_spans = [
+                s for s in sentence.token_spans
+                if len(s.text) > 3 and s.text.lower() not in self.STOPWORDS and s.text.isalpha()
+            ]
+            outliers = [s for s in content_spans if s.text.lower() not in global_context_tokens]
+            # Select top distinctive content tokens (up to 4) to maintain high precision
+            for s in outliers[:4]:
+                detected_spans.append(LocalizedSpan(
+                    text=s.text,
+                    start_char=s.start_char,
+                    end_char=s.end_char,
+                    salience_score=0.85,
+                    reason="Topical vocabulary outlier",
+                    method="lexical_divergence_attribution"
+                ))
+
+        # Defensive fallback if no specialized spans caught
+        if not detected_spans and is_anomalous and global_context_tokens:
+            content_spans = [
+                s for s in sentence.token_spans
+                if len(s.text) > 3 and s.text.lower() not in self.STOPWORDS and s.text.isalpha()
+            ]
+            outliers = [s for s in content_spans if s.text.lower() not in global_context_tokens]
+            for s in outliers[:2]:
+                detected_spans.append(LocalizedSpan(
+                    text=s.text,
+                    start_char=s.start_char,
+                    end_char=s.end_char,
+                    salience_score=0.75,
+                    reason="Contextual vocabulary outlier",
+                    method="lexical_divergence_attribution"
+                ))
 
         # Merge adjacent spans into coherent multi-token phrase spans
         merged_spans = self._merge_adjacent_spans(detected_spans, sentence.text, sentence.start_char)

@@ -194,7 +194,8 @@ class DGSAModel:
                 gamma=eff_gamma,
                 local_details=local_details[i],
                 contradiction_details=contra_details[i],
-                localized_spans=loc_result.spans
+                localized_spans=loc_result.spans,
+                contradiction_backend=getattr(self.contradiction_detector, "backend", "unknown")
             )
             explanations.append(explanation)
 

@@ -102,6 +102,40 @@ class TestAnomalyDetection(unittest.TestCase):
         self.assertEqual(np.argmax(scores), 2)
         self.assertTrue(result.is_anomaly[2])
 
+    def test_empty_document_handling(self):
+        """Verifies that empty string or whitespace does not crash the pipeline."""
+        res_empty = self.dgsa_model.analyze_document("")
+        self.assertEqual(res_empty.total_sentences, 0)
+        self.assertEqual(res_empty.num_anomalous, 0)
+        self.assertEqual(len(res_empty.anomaly_scores), 0)
+
+        res_ws = self.dgsa_model.analyze_document("   \n\n\t  ")
+        self.assertEqual(res_ws.total_sentences, 0)
+
+    def test_single_sentence_document_handling(self):
+        """Single sentence document has G(i)=0 and no neighbors; verify zero anomalies."""
+        text = "Transformer self-attention models scale compute efficiently."
+        res = self.dgsa_model.analyze_document(text)
+        self.assertEqual(res.total_sentences, 1)
+        self.assertEqual(len(res.anomaly_scores), 1)
+        self.assertAlmostEqual(res.anomaly_scores[0], 0.0, places=3)
+        self.assertFalse(res.is_anomaly[0])
+
+    def test_explanation_engine_direct_model_evidence(self):
+        """Verifies that explanations contain direct_model_evidence and heuristic_indicators."""
+        doc = (
+            "Machine learning systems learn representations from data.\n\n"
+            "Supervised neural networks minimize empirical training risk.\n\n"
+            "Astronauts landed on the surface of Mars in a titanium capsule.\n\n"
+            "Deep neural network models optimize objective functions through gradient descent."
+        )
+        res = self.dgsa_model.analyze_document(doc)
+        exp = res.explanations[2]
+        self.assertTrue(hasattr(exp, "direct_model_evidence"))
+        self.assertTrue(hasattr(exp, "heuristic_indicators"))
+        self.assertIn("active_contradiction_backend", exp.direct_model_evidence)
+        self.assertIn("neural_confidence", exp.direct_model_evidence)
+
 
 if __name__ == "__main__":
     unittest.main()

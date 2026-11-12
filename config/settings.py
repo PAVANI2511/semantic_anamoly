@@ -95,6 +95,8 @@ class AnomalyCategories:
     CONTEXTUAL_INCONSISTENCY = "contextual_inconsistency"
     ENTITY_INCONSISTENCY = "entity_inconsistency"
     ATTRIBUTE_INCONSISTENCY = "attribute_inconsistency"
+    NUMERICAL_INCONSISTENCY = "numerical_inconsistency"
+    TEMPORAL_INCONSISTENCY = "temporal_inconsistency"
     NORMAL = "normal"
 
     ALL_CATEGORIES: List[str] = field(default_factory=lambda: [
@@ -103,6 +105,8 @@ class AnomalyCategories:
         "contextual_inconsistency",
         "entity_inconsistency",
         "attribute_inconsistency",
+        "numerical_inconsistency",
+        "temporal_inconsistency"
     ])
 
 

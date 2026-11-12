@@ -1,0 +1,8 @@
+Category,Precision,Recall,F1-Score,Total Count
+contextual_inconsistency,1.0000 +/- 0.0000,1.0000 +/- 0.0000,1.0000 +/- 0.0000,2
+contradiction,1.0000 +/- 0.0000,1.0000 +/- 0.0000,1.0000 +/- 0.0000,4
+entity_inconsistency,0.5000 +/- 0.7071,0.5000 +/- 0.7071,0.5000 +/- 0.7071,2
+normal,0.0000 +/- 0.0000,0.0000 +/- 0.0000,0.0000 +/- 0.0000,94
+topic_deviation,1.0000 +/- 0.0000,1.0000 +/- 0.0000,1.0000 +/- 0.0000,2
+attribute_inconsistency,1.0000 +/- 0.0000,1.0000 +/- 0.0000,1.0000 +/- 0.0000,2
+numerical_inconsistency,1.0000 +/- nan,1.0000 +/- nan,1.0000 +/- nan,1

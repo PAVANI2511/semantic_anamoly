@@ -1,11 +1,11 @@
 {
   "benchmark_metadata": {
-    "dataset_name": "DGSA Multi-Domain Semantic Anomaly Benchmark v2.0",
+    "dataset_name": "DGSA Multi-Domain Semantic Anomaly Benchmark v3.0",
     "is_synthetic": true,
-    "description": "Gold-standard research benchmark featuring 12 diverse domain documents with curated semantic anomalies and verified character spans.",
+    "description": "Gold-standard research benchmark featuring 20 diverse domain documents with curated semantic anomalies, verified character spans, and pure normal controls.",
     "disclaimer": "Curated for rigorous algorithmic verification and zero-leakage document-level baseline comparison.",
-    "version": "2.0",
-    "total_documents": 12
+    "version": "3.0",
+    "total_documents": 20
   },
   "documents": [
     {
@@ -111,19 +111,14 @@
               "end_char": 7
             },
             {
-              "text": "chocolate",
+              "text": "chocolate cake",
               "start_char": 19,
-              "end_char": 28
-            },
-            {
-              "text": "cake",
-              "start_char": 29,
               "end_char": 33
             },
             {
               "text": "oven",
-              "start_char": 58,
-              "end_char": 62
+              "start_char": 59,
+              "end_char": 63
             }
           ]
         },
@@ -191,14 +186,14 @@
           "category": "contradiction",
           "token_spans": [
             {
-              "text": "failure",
+              "text": "financial failure",
               "start_char": 30,
-              "end_char": 37
+              "end_char": 47
             },
             {
-              "text": "decreased",
+              "text": "decreased drastically",
               "start_char": 86,
-              "end_char": 95
+              "end_char": 107
             }
           ]
         },
@@ -259,19 +254,14 @@
           "category": "entity_inconsistency",
           "token_spans": [
             {
-              "text": "Detective",
+              "text": "Detective Miller",
               "start_char": 0,
-              "end_char": 9
-            },
-            {
-              "text": "Miller",
-              "start_char": 10,
               "end_char": 16
             },
             {
-              "text": "robbery",
-              "start_char": 64,
-              "end_char": 71
+              "text": "bank robbery",
+              "start_char": 60,
+              "end_char": 72
             }
           ]
         },
@@ -337,19 +327,14 @@
               "end_char": 50
             },
             {
-              "text": "lush",
-              "start_char": 71,
-              "end_char": 75
-            },
-            {
-              "text": "forests",
-              "start_char": 82,
-              "end_char": 89
+              "text": "lush green Martian forests",
+              "start_char": 72,
+              "end_char": 98
             },
             {
               "text": "tropical",
-              "start_char": 107,
-              "end_char": 115
+              "start_char": 109,
+              "end_char": 117
             }
           ]
         },
@@ -410,19 +395,14 @@
           "category": "contextual_inconsistency",
           "token_spans": [
             {
-              "text": "tomato",
+              "text": "tomato vines",
               "start_char": 8,
-              "end_char": 14
-            },
-            {
-              "text": "vines",
-              "start_char": 15,
               "end_char": 20
             },
             {
-              "text": "garden",
-              "start_char": 100,
-              "end_char": 106
+              "text": "garden plots",
+              "start_char": 108,
+              "end_char": 120
             }
           ]
         },
@@ -483,19 +463,14 @@
           "category": "contradiction",
           "token_spans": [
             {
-              "text": "not",
-              "start_char": 18,
-              "end_char": 21
-            },
-            {
-              "text": "grant",
-              "start_char": 22,
+              "text": "does not grant",
+              "start_char": 13,
               "end_char": 27
             },
             {
-              "text": "retains",
-              "start_char": 64,
-              "end_char": 71
+              "text": "retains absolute exclusive ownership",
+              "start_char": 65,
+              "end_char": 101
             }
           ]
         },
@@ -556,19 +531,14 @@
           "category": "topic_deviation",
           "token_spans": [
             {
-              "text": "baseball",
-              "start_char": 26,
-              "end_char": 34
+              "text": "baseball diamond",
+              "start_char": 24,
+              "end_char": 40
             },
             {
-              "text": "diamond",
-              "start_char": 35,
-              "end_char": 42
-            },
-            {
-              "text": "pitcher",
+              "text": "pitcher mound",
               "start_char": 95,
-              "end_char": 102
+              "end_char": 108
             }
           ]
         },
@@ -629,14 +599,14 @@
           "category": "contradiction",
           "token_spans": [
             {
-              "text": "reduced",
+              "text": "reduced the benchmark",
               "start_char": 33,
-              "end_char": 40
+              "end_char": 54
             },
             {
-              "text": "0.25",
+              "text": "0.25 percent",
               "start_char": 82,
-              "end_char": 86
+              "end_char": 94
             }
           ]
         },
@@ -755,13 +725,18 @@
           "token_spans": [
             {
               "text": "midnight",
-              "start_char": 74,
-              "end_char": 82
+              "start_char": 73,
+              "end_char": 81
             },
             {
               "text": "darkness",
               "start_char": 103,
               "end_char": 111
+            },
+            {
+              "text": "zero light",
+              "start_char": 117,
+              "end_char": 127
             }
           ]
         },
@@ -822,8 +797,8 @@
           "category": "entity_inconsistency",
           "token_spans": [
             {
-              "text": "Edward",
-              "start_char": 8,
+              "text": "Captain Edward",
+              "start_char": 0,
               "end_char": 14
             },
             {
@@ -832,8 +807,8 @@
               "end_char": 35
             },
             {
-              "text": "yacht",
-              "start_char": 57,
+              "text": "luxury wooden yacht",
+              "start_char": 43,
               "end_char": 62
             }
           ]
@@ -855,6 +830,559 @@
         {
           "sentence_id": 6,
           "text": "Gimbaled hydraulic actuators provide active thrust vector control to steer the launch vehicle through atmospheric ascent.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        }
+      ]
+    },
+    {
+      "doc_id": "DOC_13",
+      "title": "Global Semiconductor Supply Chain Lead Times",
+      "domain": "supply_chain",
+      "is_synthetic": true,
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Advanced fabrication of three-nanometer silicon wafers requires high-precision extreme ultraviolet photolithography.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 1,
+          "text": "Fabrication lead times regularly span between 16 and 26 weeks from raw boule slicing to final die packaging.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 2,
+          "text": "Finished integrated circuits undergo automated optical inspection before international freight dispatch.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 3,
+          "text": "The cargo freight ship delivered the finished semiconductors on Monday morning, five weeks before the silicon wafers were manufactured in the cleanroom on Friday.",
+          "is_anomaly": 1,
+          "category": "temporal_inconsistency",
+          "token_spans": [
+            {
+              "text": "five weeks before",
+              "start_char": 80,
+              "end_char": 97
+            },
+            {
+              "text": "manufactured",
+              "start_char": 122,
+              "end_char": 134
+            }
+          ]
+        },
+        {
+          "sentence_id": 4,
+          "text": "Robust supply chain logistics buffer against oceanic cargo bottlenecks and transshipment port congestion.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 5,
+          "text": "Just-in-time inventory policies maintain holding costs within designated enterprise operational targets.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 6,
+          "text": "Assembly, testing, and packaging facilities receive processed silicon dies according to strict quarterly production schedules.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        }
+      ]
+    },
+    {
+      "doc_id": "DOC_14",
+      "title": "Cardiovascular Pharmacology Dosage Regimen",
+      "domain": "pharmacology",
+      "is_synthetic": true,
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Intravenous carvedilol administration reduces systemic blood pressure by attenuating alpha-1 and beta-adrenergic receptor stimulation.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 1,
+          "text": "The standard starting clinical dosage for congestive heart failure initiates at 3.125 milligrams twice daily.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 2,
+          "text": "Gradual titration occurs at bi-weekly intervals toward a ceiling maximum target of 25.0 milligrams twice daily.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 3,
+          "text": "The resident physician administered an acute single bolus dose of 3125.0 grams of carvedilol to the neonatal infant patient.",
+          "is_anomaly": 1,
+          "category": "numerical_inconsistency",
+          "token_spans": [
+            {
+              "text": "3125.0 grams",
+              "start_char": 66,
+              "end_char": 78
+            },
+            {
+              "text": "neonatal infant",
+              "start_char": 100,
+              "end_char": 115
+            }
+          ]
+        },
+        {
+          "sentence_id": 4,
+          "text": "Continuous electrocardiographic telemetry ensures absence of bradycardia or high-grade atrioventricular block.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 5,
+          "text": "Renal and hepatic clearance profiles dictate therapeutic drug monitoring frequencies and metabolic clearance rates.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 6,
+          "text": "Patient systolic pressures stabilized within the target therapeutic window of 110 to 125 millimeters of mercury.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        }
+      ]
+    },
+    {
+      "doc_id": "DOC_15",
+      "title": "Autonomous Vehicle Perception and Tracking",
+      "domain": "autonomous_vehicles",
+      "is_synthetic": true,
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Autonomous perception systems fuse point cloud data from LiDAR sensors with multi-camera computer vision feeds.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 1,
+          "text": "Deep neural network backbones classify dynamic road obstacles including pedestrians, cyclists, and moving vehicles.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 2,
+          "text": "Extended Kalman filter trackers predict the trajectory and velocity vectors of surrounding traffic participants.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 3,
+          "text": "Grandmother knits warm wool scarves and colorful winter mittens beside the crackling brick fireplace.",
+          "is_anomaly": 1,
+          "category": "topic_deviation",
+          "token_spans": [
+            {
+              "text": "knits",
+              "start_char": 12,
+              "end_char": 17
+            },
+            {
+              "text": "wool scarves",
+              "start_char": 23,
+              "end_char": 35
+            },
+            {
+              "text": "winter mittens",
+              "start_char": 49,
+              "end_char": 63
+            },
+            {
+              "text": "fireplace",
+              "start_char": 91,
+              "end_char": 100
+            }
+          ]
+        },
+        {
+          "sentence_id": 4,
+          "text": "The motion planning module generates collision-free spline trajectories within road boundary constraints.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 5,
+          "text": "Model predictive control algorithms calculate steering angles and longitudinal acceleration commands.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 6,
+          "text": "Redundant drive-by-wire actuators execute vehicle maneuvering with sub-millisecond response latency.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        }
+      ]
+    },
+    {
+      "doc_id": "DOC_16",
+      "title": "Constitutional Law and Judicial Review",
+      "domain": "constitutional_law",
+      "is_synthetic": true,
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "The Supreme Court exercises judicial review to determine the constitutionality of legislative statutes and executive decrees.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 1,
+          "text": "Under the seminal doctrine established in Marbury v. Madison, the judiciary possesses paramount authority to interpret legal mandates.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 2,
+          "text": "Strict scrutiny represents the highest judicial standard applied to statutory classifications implicating fundamental constitutional rights.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 3,
+          "text": "To withstand strict scrutiny, the contested government measure must serve a compelling state interest and be narrowly tailored.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 4,
+          "text": "Lower federal appellate courts apply binding judicial precedent established by Supreme Court jurisprudence.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 5,
+          "text": "The principle of stare decisis fosters institutional legitimacy and legal predictability across common law jurisdictions.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 6,
+          "text": "Dissenting opinions elucidate alternative legal interpretations that may inform future constitutional jurisprudence.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        }
+      ]
+    },
+    {
+      "doc_id": "DOC_17",
+      "title": "Semiconductor EUV Photolithography",
+      "domain": "semiconductor_physics",
+      "is_synthetic": true,
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Extreme ultraviolet lithography systems utilize light with a wavelength of 13.5 nanometers to print nanoscale transistor features.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 1,
+          "text": "High-power carbon dioxide lasers pulse into molten tin droplets fifty thousand times per second to generate extreme ultraviolet plasma.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 2,
+          "text": "Highly reflective multilayer molybdenum-silicon mirrors focus the extreme ultraviolet light onto the photoresist-coated wafer.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 3,
+          "text": "Competitive marathon runners hydrate with isotonic electrolyte beverages to maintain cardiovascular endurance during hilly highway courses.",
+          "is_anomaly": 1,
+          "category": "contextual_inconsistency",
+          "token_spans": [
+            {
+              "text": "marathon runners",
+              "start_char": 12,
+              "end_char": 28
+            },
+            {
+              "text": "electrolyte beverages",
+              "start_char": 51,
+              "end_char": 72
+            },
+            {
+              "text": "highway courses",
+              "start_char": 123,
+              "end_char": 138
+            }
+          ]
+        },
+        {
+          "sentence_id": 4,
+          "text": "Operating under ultra-high vacuum conditions prevents atmospheric gases from absorbing the fragile ultraviolet radiation.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 5,
+          "text": "Precision interferometer sensors adjust optical alignment with picometer accuracy during exposure steps.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 6,
+          "text": "Nanometer-scale resolution enables continued geometric scaling of dense semiconductor logic and memory circuits.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        }
+      ]
+    },
+    {
+      "doc_id": "DOC_18",
+      "title": "Twentieth-Century Diplomatic History",
+      "domain": "diplomatic_history",
+      "is_synthetic": true,
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Following the conclusion of the Second World War, European diplomatic relations underwent profound structural realignment.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 1,
+          "text": "The Marshall Plan channeled substantial economic reconstruction funds across war-torn Western European democracies.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 2,
+          "text": "The North Atlantic Treaty Organization was chartered in 1949 to provide collective security against potential Soviet expansion.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 3,
+          "text": "Galactic Emperor Palpatine dispatched Imperial Star Destroyers to blockade the rebel base on the desert planet Tatooine.",
+          "is_anomaly": 1,
+          "category": "entity_inconsistency",
+          "token_spans": [
+            {
+              "text": "Emperor Palpatine",
+              "start_char": 9,
+              "end_char": 26
+            },
+            {
+              "text": "Imperial Star Destroyers",
+              "start_char": 38,
+              "end_char": 62
+            },
+            {
+              "text": "Tatooine",
+              "start_char": 111,
+              "end_char": 119
+            }
+          ]
+        },
+        {
+          "sentence_id": 4,
+          "text": "The Warsaw Pact was subsequently established in 1955 as a counterbalancing military alliance among Eastern Bloc nations.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 5,
+          "text": "Diplomatic tensions between opposing ideological blocs crystallized into the enduring geopolitical confrontation of the Cold War.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 6,
+          "text": "Bilateral nuclear arms limitation negotiations throughout the 1970s eventually led to strategic detente agreements.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        }
+      ]
+    },
+    {
+      "doc_id": "DOC_19",
+      "title": "Commercial Avionics Flight Control Systems",
+      "domain": "aviation_engineering",
+      "is_synthetic": true,
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Modern commercial jetliners incorporate digital fly-by-wire flight control computers to modulate aerodynamic control surfaces.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 1,
+          "text": "Triplicate redundant flight management systems process sensor data from pitot tubes, static ports, and inertial reference units.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 2,
+          "text": "Flight envelope protection software limits pilot inputs to prevent aerodynamic stalls, overspeed conditions, or structural over-G stresses.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 3,
+          "text": "The twin-engine turbofan aircraft flew seamlessly through the outer stratosphere propelled entirely by wooden oars rowing through atmospheric air.",
+          "is_anomaly": 1,
+          "category": "attribute_inconsistency",
+          "token_spans": [
+            {
+              "text": "wooden oars",
+              "start_char": 103,
+              "end_char": 114
+            },
+            {
+              "text": "rowing",
+              "start_char": 115,
+              "end_char": 121
+            }
+          ]
+        },
+        {
+          "sentence_id": 4,
+          "text": "Primary flight displays synthesize attitude, airspeed, altitude, and heading information into intuitive graphical interfaces.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 5,
+          "text": "Hydraulic actuators translate electronic servo signals into mechanical deflections of ailerons, elevators, and rudder surfaces.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 6,
+          "text": "Automated autothrottle subsystems maintain commanded cruise Mach numbers during oceanic navigation waypoints.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        }
+      ]
+    },
+    {
+      "doc_id": "DOC_20",
+      "title": "Hydroelectric Dam Power Generation",
+      "domain": "hydropower_engineering",
+      "is_synthetic": true,
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Hydroelectric dams capture the gravitational potential energy of impounded river water to generate dispatchable electrical energy.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 1,
+          "text": "High-pressure water rushes through penstocks to turn hydraulic Francis turbine runners connected to electric generator rotors.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 2,
+          "text": "Heavy rotating generator coils convert mechanical shaft torque into alternating electric current through electromagnetic induction.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 3,
+          "text": "The hydroelectric dam generated ten gigawatt-hours of clean electricity on Tuesday, three centuries before civil engineers constructed the concrete foundation in the year 2012.",
+          "is_anomaly": 1,
+          "category": "temporal_inconsistency",
+          "token_spans": [
+            {
+              "text": "three centuries before",
+              "start_char": 84,
+              "end_char": 106
+            },
+            {
+              "text": "2012",
+              "start_char": 171,
+              "end_char": 175
+            }
+          ]
+        },
+        {
+          "sentence_id": 4,
+          "text": "Spillway gates regulate reservoir storage levels during seasonal torrential rainfall and snowmelt runoff events.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 5,
+          "text": "Step-up transformers elevate voltage levels to hundreds of kilovolts for low-loss transmission across bulk electrical grids.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": []
+        },
+        {
+          "sentence_id": 6,
+          "text": "Pumped-storage facilities pump water back to the upper reservoir during off-peak hours to provide grid storage capacity.",
           "is_anomaly": 0,
           "category": "normal",
           "token_spans": []

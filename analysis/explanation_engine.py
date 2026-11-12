@@ -1,6 +1,7 @@
 """
 Module 8: Explainable AI Engine.
 Generates evidence-grounded, transparent explanations for flagged anomalies,
+distinguishing continuous neural model evidence from rule-based/heuristic indicators,
 detailing contributing mathematical signals, context sentences, and localized spans.
 """
 
@@ -28,12 +29,16 @@ class AnomalyExplanation:
     localized_spans: List[Dict[str, Any]] = field(default_factory=list)
     has_token_localization: bool = False
     evidence_certainty: str = "moderate"
+    contradiction_backend: str = "unknown"
+    direct_model_evidence: Dict[str, Any] = field(default_factory=dict)
+    heuristic_indicators: List[str] = field(default_factory=list)
 
 
 class ExplanationEngine:
     """
     Constructs explainable reports directly from DGSA mathematical decomposition:
     G(i) [Global], L(i) [Local], and C(i) [Contradiction].
+    Explicitly separates direct neural model evidence from heuristic indicators.
     """
 
     @classmethod
@@ -52,7 +57,8 @@ class ExplanationEngine:
         gamma: float,
         local_details: Dict[str, Any],
         contradiction_details: Dict[str, Any],
-        localized_spans: List[LocalizedSpan]
+        localized_spans: List[LocalizedSpan],
+        contradiction_backend: str = "unknown"
     ) -> AnomalyExplanation:
         """Constructs an evidence-backed explanation for a sentence."""
         # Calculate component contributions
@@ -91,6 +97,22 @@ class ExplanationEngine:
         factors.sort(key=lambda x: x[1], reverse=True)
         primary_factor = factors[0][0]
 
+        # Separate continuous neural model evidence from discrete heuristic indicators
+        direct_model_evidence = {
+            "global_centroid_divergence_G": round(float(global_score), 4),
+            "local_neighborhood_inconsistency_L": round(float(local_score), 4),
+            "contradiction_signal_C": round(float(contradiction_score), 4),
+            "active_contradiction_backend": contradiction_backend,
+            "neural_confidence": round(float(anomaly_score), 4)
+        }
+
+        heuristic_indicators: List[str] = []
+        if local_details.get("is_bridge_anomaly"):
+            heuristic_indicators.append("Bridge discontinuity detected across flanking sentences")
+        if local_details.get("entities"):
+            novel_ents = local_details["entities"][:3]
+            heuristic_indicators.append(f"Unprecedented named entity: {', '.join(novel_ents)}")
+
         # Formulate contextual narrative
         reasons_text = []
         if category == AnomalyCategories.CONTRADICTION:
@@ -98,19 +120,25 @@ class ExplanationEngine:
             conflicting_idx = contradiction_details.get("conflicting_sentence_idx")
             conflict_ref = f"sentence #{conflicting_idx + 1}" if conflicting_idx is not None else "preceding context"
             if reasons:
-                reasons_text.append(f"Model detected direct semantic conflict with {conflict_ref}: {'; '.join(reasons)}.")
+                reasons_text.append(f"Model detected semantic contradiction with {conflict_ref}: {'; '.join(reasons)}.")
+                for r in reasons:
+                    heuristic_indicators.append(f"Contradiction clue: {r}")
             else:
-                reasons_text.append(f"Opposing truth value or polarity conflict relative to {conflict_ref}.")
+                reasons_text.append(
+                    f"Direct semantic contradiction detected against {conflict_ref} "
+                    f"using {contradiction_backend}."
+                )
         elif category == AnomalyCategories.TOPIC_DEVIATION:
             reasons_text.append(
                 f"Global semantic deviation is exceptionally high (G={global_score:.2f}). "
-                f"The semantic embedding of this sentence diverges strongly from the document's central semantic cluster."
+                f"The semantic embedding diverges from the document centroid."
             )
+            heuristic_indicators.append("Global embedding cosine distance above threshold")
         elif category in {AnomalyCategories.ENTITY_INCONSISTENCY, AnomalyCategories.ATTRIBUTE_INCONSISTENCY}:
             if local_details.get("is_bridge_anomaly"):
                 reasons_text.append(
-                    "Bridge anomaly detected: The preceding and subsequent sentences share strong semantic continuity, "
-                    "but this sentence abruptly breaks the local progression."
+                    "Bridge anomaly detected: Flanking sentences share semantic continuity, "
+                    "but this sentence abruptly breaks narrative progression."
                 )
             if local_details.get("entities"):
                 reasons_text.append(f"Contains novel or unlinked entities: {', '.join(local_details['entities'][:3])}.")
@@ -151,6 +179,8 @@ class ExplanationEngine:
             contextual_explanation=explanation_summary,
             localized_spans=spans_json,
             has_token_localization=len(spans_json) > 0,
-            evidence_certainty=certainty
+            evidence_certainty=certainty,
+            contradiction_backend=contradiction_backend,
+            direct_model_evidence=direct_model_evidence,
+            heuristic_indicators=heuristic_indicators
         )
-

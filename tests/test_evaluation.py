@@ -71,9 +71,29 @@ class TestDatasetLoader(unittest.TestCase):
         self.assertEqual(len(train_ids.intersection(test_ids)), 0)
         self.assertEqual(len(train_ids) + len(test_ids), len(docs))
 
+    def test_multiseed_three_way_split_zero_leakage(self):
+        docs = DatasetLoader.load_from_json("data/datasets/research_benchmark.json")
+        for seed in [42, 123, 999]:
+            train, val, test = DatasetLoader.split_train_val_test(docs, train_ratio=0.50, val_ratio=0.25, test_ratio=0.25, random_seed=seed)
+            t_ids = {d.doc_id for d in train}
+            v_ids = {d.doc_id for d in val}
+            te_ids = {d.doc_id for d in test}
+            self.assertEqual(len(t_ids.intersection(v_ids)), 0)
+            self.assertEqual(len(t_ids.intersection(te_ids)), 0)
+            self.assertEqual(len(v_ids.intersection(te_ids)), 0)
+            self.assertEqual(len(t_ids) + len(v_ids) + len(te_ids), len(docs))
+
 
 class TestBaselines(unittest.TestCase):
     """Verifies baseline anomaly detection models."""
+
+    def test_baseline_threshold_calibration(self):
+        val_scores = np.array([0.1, 0.2, 0.35, 0.75, 0.85, 0.95])
+        val_labels = np.array([0, 0, 0, 1, 1, 1])
+        calibrated_th = BaselineRunner.calibrate_threshold(val_scores, val_labels, default_th=0.50)
+        # Any threshold between 0.36 and 0.75 yields perfect F1 = 1.0
+        self.assertGreaterEqual(calibrated_th, 0.35)
+        self.assertLessEqual(calibrated_th, 0.75)
 
     def test_tfidf_isolation_forest_baseline(self):
         texts = [
@@ -86,6 +106,7 @@ class TestBaselines(unittest.TestCase):
         res = BaselineRunner.run_tfidf_isolation_forest(texts)
         self.assertIn("scores", res)
         self.assertIn("preds", res)
+        self.assertIn("threshold", res)
         self.assertEqual(len(res["scores"]), len(texts))
         self.assertGreater(res["time_ms"], 0.0)
 

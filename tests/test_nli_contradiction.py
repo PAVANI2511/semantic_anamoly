@@ -77,6 +77,65 @@ class TestNLIContradiction(unittest.TestCase):
         self.assertGreater(norm_scores[2], norm_scores[0])
         self.assertGreater(norm_scores[2], 0.40)
 
+    def test_mocked_nli_loading_success(self):
+        """Verifies that when CrossEncoder loads cleanly, backend is 'nli_transformer'."""
+        from unittest.mock import MagicMock, patch
+        mock_model = MagicMock()
+        mock_model.predict.return_value = np.array([[5.0, -2.0, -1.0]])  # High contradiction logit
+
+        with patch("sentence_transformers.CrossEncoder", return_value=mock_model):
+            # Bypass class cache for isolated testing
+            old_cache = ContradictionDetector._cached_nli_model
+            old_name = ContradictionDetector._cached_model_name
+            ContradictionDetector._cached_nli_model = None
+            ContradictionDetector._cached_model_name = None
+            try:
+                det = ContradictionDetector(use_nli=True, model_name="mock-cross-encoder")
+                self.assertTrue(det.is_nli_active)
+                self.assertEqual(det.backend, "nli_transformer")
+                self.assertIsNotNone(det._nli_model)
+            finally:
+                ContradictionDetector._cached_nli_model = old_cache
+                ContradictionDetector._cached_model_name = old_name
+
+    def test_mocked_nli_loading_failure_falls_back_to_lexical(self):
+        """Verifies graceful fallback to lexical when CrossEncoder raises ImportError or Exception."""
+        from unittest.mock import patch
+
+        with patch("sentence_transformers.CrossEncoder", side_effect=ImportError("sentence_transformers missing")):
+            old_cache = ContradictionDetector._cached_nli_model
+            old_name = ContradictionDetector._cached_model_name
+            ContradictionDetector._cached_nli_model = None
+            ContradictionDetector._cached_model_name = None
+            try:
+                det = ContradictionDetector(use_nli=True, model_name="unreachable-model")
+                self.assertFalse(det.is_nli_active)
+                self.assertEqual(det.backend, "lexical_fallback")
+                self.assertIsNone(det._nli_model)
+            finally:
+                ContradictionDetector._cached_nli_model = old_cache
+                ContradictionDetector._cached_model_name = old_name
+
+    def test_avoid_redundant_model_loading(self):
+        """Verifies that model instance is cached and not reloaded repeatedly."""
+        from unittest.mock import MagicMock, patch
+        mock_factory = MagicMock(return_value=MagicMock())
+
+        with patch("sentence_transformers.CrossEncoder", mock_factory):
+            old_cache = ContradictionDetector._cached_nli_model
+            old_name = ContradictionDetector._cached_model_name
+            ContradictionDetector._cached_nli_model = None
+            ContradictionDetector._cached_model_name = None
+            try:
+                det1 = ContradictionDetector(use_nli=True, model_name="test-singleton")
+                det2 = ContradictionDetector(use_nli=True, model_name="test-singleton")
+                # Factory should have been invoked only once
+                self.assertEqual(mock_factory.call_count, 1)
+                self.assertIs(det1._nli_model, det2._nli_model)
+            finally:
+                ContradictionDetector._cached_nli_model = old_cache
+                ContradictionDetector._cached_model_name = old_name
+
 
 if __name__ == "__main__":
     unittest.main()
