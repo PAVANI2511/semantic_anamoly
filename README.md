@@ -280,3 +280,18 @@ streamlit run app.py
 2. **Subtly Phrased World-Knowledge Contradictions:** If a sentence contradicts an external real-world fact not stated inside the document (e.g., historical dates or physical constants not mentioned earlier), document-internal NLI cannot detect it without retrieval-augmented generation (RAG).
 3. **Short / Fragmentary Documents:** Documents consisting of fewer than 3 sentences do not provide enough statistical evidence to form a reliable semantic centroid. The system applies explicit damping, but results on ultra-short text should be interpreted conservatively.
 4. **Token Span Boundary Granularity:** Semantic disruption often resides in multi-word clauses rather than isolated lexical tokens. While token F1 is moderate, the 100% partial match rate demonstrates that the localized spans consistently point human reviewers to the exact anomalous region.
+
+---
+
+## 📜 Version History & Changelog
+
+For a complete chronological record of all architectural updates, bug fixes, benchmark enhancements, and experimental calibrations, please consult [CHANGELOG.md](CHANGELOG.md).
+
+### Key Highlights in v3.0.0 (Research Validation Edition)
+- **Expanded 20-Document Benchmark Dataset:** 142 sentences, 17 controlled anomalies across 20 distinct domains, with native coverage for all 7 anomaly categories and 2 pure normal controls.
+- **Fair Validation Baseline Threshold Calibration:** All baselines calibrated on validation data ($T^*_{baseline} \in [0.10, 0.90]$) to eliminate bias.
+- **Multi-Seed Stability:** Evaluated over seeds `[42, 123, 999]` with mean $\pm$ standard deviation reported.
+- **Targeted Span Localization:** +176% token precision boost ($0.0786 \to 0.2170$) via category-targeted attribution pivots.
+- **Explainability Engine:** Clean separation of continuous neural model evidence (`direct_model_evidence`) from rule indicators (`heuristic_indicators`).
+- **Comprehensive Unit Testing:** All 37 unit tests passing (100% pass rate).
+
