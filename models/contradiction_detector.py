@@ -2,12 +2,13 @@
 Module: Contradiction and Semantic Inconsistency Detection.
 Combines Pretrained Natural Language Inference (CrossEncoder NLI) with
 lexical polarity and negation fallback detection.
+Supports safe lazy loading, dependency isolation, and automatic fallback on inference failure.
 """
 
+import os
+import re
 from typing import List, Tuple, Dict, Any, Optional
 import numpy as np
-import re
-import os
 
 from utils.logging_config import logger
 from utils.helpers import cosine_similarity_matrix
@@ -48,28 +49,73 @@ class ContradictionDetector:
         self.model_name = model_name or config.model.nli_model_name
         self.max_context_pairs = max_context_pairs
         self.is_nli_active = False
-        self._nli_model = None
+        self._nli_model: Any = None
 
         if self.use_nli:
             self._load_nli_model()
 
-    def _load_nli_model(self) -> None:
-        """Loads and caches the pretrained CrossEncoder NLI transformer."""
+    @staticmethod
+    def is_nli_dependency_available() -> bool:
+        """Checks if sentence_transformers is installed and importable."""
+        try:
+            import sentence_transformers  # noqa: F401
+            return True
+        except (ImportError, ModuleNotFoundError):
+            return False
+
+    @classmethod
+    def _import_cross_encoder(cls):
+        """
+        Safely imports the CrossEncoder class from sentence_transformers.
+        Isolated to allow clean unit testing and mocking independent of the optional dependency.
+        """
+        from sentence_transformers import CrossEncoder
+        return CrossEncoder
+
+    def _load_nli_model(self, force_reload: bool = False) -> bool:
+        """
+        Loads and caches the pretrained CrossEncoder NLI transformer safely.
+        Returns True if the model is ready, False otherwise.
+        """
         # Reuse class-level cached instance if matching
-        if ContradictionDetector._cached_nli_model is not None and ContradictionDetector._cached_model_name == self.model_name:
+        if not force_reload and ContradictionDetector._cached_nli_model is not None and ContradictionDetector._cached_model_name == self.model_name:
             self._nli_model = ContradictionDetector._cached_nli_model
             self.is_nli_active = True
-            return
+            return True
 
         try:
-            from sentence_transformers import CrossEncoder
+            cross_encoder_cls = self._import_cross_encoder()
             logger.info(f"Loading CrossEncoder NLI model: {self.model_name}...")
-            model = CrossEncoder(self.model_name)
+            is_offline = os.environ.get("SEMANTIC_SENTINEL_OFFLINE", "").strip().lower() in {"1", "true", "yes"} or os.environ.get("HF_HUB_OFFLINE", "") == "1"
+            if is_offline:
+                try:
+                    model = cross_encoder_cls(self.model_name, local_files_only=True)
+                except TypeError:
+                    model = cross_encoder_cls(self.model_name)
+            else:
+                try:
+                    model = cross_encoder_cls(self.model_name)
+                except Exception as net_err:
+                    logger.info(f"Initial remote load failed ({net_err}); attempting local cache fallback...")
+                    try:
+                        model = cross_encoder_cls(self.model_name, local_files_only=True)
+                    except Exception:
+                        raise net_err
+
             self._nli_model = model
             self.is_nli_active = True
             ContradictionDetector._cached_nli_model = model
             ContradictionDetector._cached_model_name = self.model_name
             logger.info(f"NLI model {self.model_name} loaded successfully.")
+            return True
+        except (ImportError, ModuleNotFoundError) as e:
+            logger.warning(
+                f"Optional NLI dependency 'sentence_transformers' unavailable ({e}). "
+                f"Activating rule-based lexical contradiction detector."
+            )
+            self._nli_model = None
+            self.is_nli_active = False
+            return False
         except Exception as e:
             logger.warning(
                 f"Failed to load NLI model '{self.model_name}' ({e}). "
@@ -77,11 +123,12 @@ class ContradictionDetector:
             )
             self._nli_model = None
             self.is_nli_active = False
+            return False
 
     @property
     def backend(self) -> str:
         """Returns the active backend name: 'nli_transformer' or 'lexical_fallback'."""
-        return "nli_transformer" if (self.use_nli and self.is_nli_active) else "lexical_fallback"
+        return "nli_transformer" if (self.use_nli and self.is_nli_active and self._nli_model is not None) else "lexical_fallback"
 
     @backend.setter
     def backend(self, val: str) -> None:
@@ -99,6 +146,30 @@ class ContradictionDetector:
     def get_active_backend(self) -> str:
         """Returns the name of the active detection backend."""
         return self.backend
+
+    def _predict_pairs_nli(self, pairs_to_test: List[Tuple[str, str]]) -> Optional[np.ndarray]:
+        """
+        Executes CrossEncoder inference on sentence pairs.
+        Returns softmax probabilities array [K, 3] or None if inference raises an exception.
+        """
+        if not self._nli_model or not pairs_to_test:
+            return None
+
+        try:
+            logits = self._nli_model.predict(pairs_to_test)
+            if not isinstance(logits, np.ndarray):
+                logits = np.array(logits)
+
+            if logits.ndim == 1:
+                logits = logits.reshape(1, -1)
+
+            # Softmax probabilities [Contradiction, Entailment, Neutral]
+            exp_l = np.exp(logits - np.max(logits, axis=1, keepdims=True))
+            probs = exp_l / np.sum(exp_l, axis=1, keepdims=True)
+            return probs
+        except Exception as e:
+            logger.warning(f"NLI inference error ({e}). Seamlessly activating lexical fallback.")
+            return None
 
     def compute_contradiction_scores(
         self,
@@ -142,43 +213,33 @@ class ContradictionDetector:
                 "reasons": []
             }
 
-            # Select candidate antecedent pairs within window
+            # Select candidate antecedent pairs within context window
             search_start = max(0, i - self.max_context_pairs)
             pairs_to_test = []
             pair_indices = []
 
             for j in range(search_start, i):
                 prev_sent = sentences[j]
-                # Filter candidates: test pairs that share lexical overlap OR moderate semantic similarity
                 lexical_overlap = self._compute_subject_overlap(cand_sent.text, prev_sent.text)
                 emb_sim = sim_matrix[i, j] if sim_matrix is not None else 0.50
 
-                # Contradiction requires a shared topic/subject
+                # Contradiction candidates require a shared topic or moderate semantic continuity
                 if lexical_overlap > 0.10 or emb_sim > 0.35:
                     pairs_to_test.append((prev_sent.text, cand_sent.text))
                     pair_indices.append(j)
 
-            # Execution Mode A: NLI CrossEncoder Transformer
-            if self.use_nli and self.is_nli_active and pairs_to_test and self._nli_model is not None:
-                try:
-                    # Model outputs logits for [contradiction, entailment, neutral]
-                    logits = self._nli_model.predict(pairs_to_test)
-                    if not isinstance(logits, np.ndarray):
-                        logits = np.array(logits)
+            nli_success = False
 
-                    if logits.ndim == 1:
-                        logits = logits.reshape(1, -1)
-
-                    # Softmax probabilities
-                    exp_l = np.exp(logits - np.max(logits, axis=1, keepdims=True))
-                    probs = exp_l / np.sum(exp_l, axis=1, keepdims=True)
-
+            # Execution Mode A: Pretrained NLI Transformer
+            if self.use_nli and self.is_nli_active and pairs_to_test:
+                probs = self._predict_pairs_nli(pairs_to_test)
+                if probs is not None:
+                    nli_success = True
                     for p_idx, (j, prob_vec) in enumerate(zip(pair_indices, probs)):
                         contra_prob = float(prob_vec[0])
                         entail_prob = float(prob_vec[1])
                         neutral_prob = float(prob_vec[2])
 
-                        # High contradiction probability
                         if contra_prob > max_contradiction:
                             max_contradiction = contra_prob
                             best_conflict = {
@@ -193,86 +254,80 @@ class ContradictionDetector:
                                     f"(Probability: {contra_prob*100:.1f}%)"
                                 ]
                             }
-                except Exception as e:
-                    logger.warning(f"NLI inference error ({e}). Using lexical fallback.")
 
             # Execution Mode B: Lexical Fallback / Augmenter
-            # Check lexical antonyms and negation asymmetries
-            for j in range(search_start, i):
-                prev_sent = sentences[j]
-                lex_score, lex_reasons = self._detect_lexical_contradiction(cand_sent.text, prev_sent.text)
-                if lex_score > max_contradiction:
-                    max_contradiction = lex_score
-                    best_conflict = {
-                        "score": lex_score,
-                        "backend": "lexical_fallback" if not self.is_nli_active else "nli_augmented_lexical",
-                        "conflicting_sentence_idx": j,
-                        "conflicting_sentence_text": prev_sent.text,
-                        "reasons": lex_reasons
-                    }
+            # Executed if NLI is inactive, or if NLI inference failed, or to augment lexical antonym clues
+            if not nli_success or max_contradiction < 0.50:
+                for j in range(search_start, i):
+                    prev_sent = sentences[j]
+                    lex_score, lex_reasons = self._detect_lexical_contradiction(cand_sent.text, prev_sent.text)
+                    if lex_score > max_contradiction:
+                        max_contradiction = lex_score
+                        best_conflict = {
+                            "score": lex_score,
+                            "backend": "lexical_fallback" if not nli_success else "nli_augmented_lexical",
+                            "conflicting_sentence_idx": j,
+                            "conflicting_sentence_text": prev_sent.text,
+                            "reasons": lex_reasons
+                        }
 
             raw_scores[i] = max_contradiction
             details.append(best_conflict)
 
-        # Calibrate scores to [0, 1] without artificial relative distortion
-        normalized_scores = np.clip(raw_scores, 0.0, 1.0).astype(np.float32)
-        return normalized_scores, raw_scores.astype(np.float32), details
+        # Calibrate output range into [0, 1]
+        norm_scores = np.clip(raw_scores, 0.0, 1.0)
+        return norm_scores, raw_scores, details
 
-    def _detect_contradiction_between(self, text_a: str, text_b: str) -> Tuple[float, List[str]]:
-        """Pairwise contradiction detection between two texts using active backend."""
-        lex_score, lex_reasons = self._detect_lexical_contradiction(text_a, text_b)
-        if self.use_nli and self.is_nli_active and self._nli_model is not None:
-            try:
-                logits = self._nli_model.predict([(text_a, text_b)])
-                if not isinstance(logits, np.ndarray):
-                    logits = np.array(logits)
-                if logits.ndim == 1:
-                    logits = logits.reshape(1, -1)
-                exp_l = np.exp(logits - np.max(logits, axis=1, keepdims=True))
-                probs = exp_l / np.sum(exp_l, axis=1, keepdims=True)
-                contra_prob = float(probs[0, 0])
-                if contra_prob >= 0.40:
-                    combined_reasons = [f"NLI Cross-Encoder detected contradiction (Probability: {contra_prob*100:.1f}%)"] + lex_reasons
-                    return max(contra_prob, lex_score), combined_reasons
-            except Exception:
-                pass
-        return lex_score, lex_reasons
-
-    def _detect_lexical_contradiction(self, text_a: str, text_b: str) -> Tuple[float, List[str]]:
-        """Evaluates whether text_a directly contradicts text_b using lexical cues."""
-        reasons = []
-        contradiction_score = 0.0
-
-        words_a = set(re.findall(r'\b\w+\b', text_a.lower()))
-        words_b = set(re.findall(r'\b\w+\b', text_b.lower()))
-
-        # 1. Antonym opposition test on shared topic
-        for pair_x, pair_y in self.CONTRADICTING_PAIRS:
-            match_x_a = any(w.startswith(pair_x) or pair_x in w for w in words_a)
-            match_y_b = any(w.startswith(pair_y) or pair_y in w for w in words_b)
-            match_y_a = any(w.startswith(pair_y) or pair_y in w for w in words_a)
-            match_x_b = any(w.startswith(pair_x) or pair_x in w for w in words_b)
-
-            if (match_x_a and match_y_b) or (match_y_a and match_x_b):
-                contradiction_score += 0.70
-                reasons.append(f"Opposing semantic terms detected: '{pair_x}' vs '{pair_y}'")
-                break
-
-        # 2. Negation asymmetry check
-        neg_in_a = bool(self.NEGATION_TERMS.intersection(words_a))
-        neg_in_b = bool(self.NEGATION_TERMS.intersection(words_b))
-        
-        shared_content_words = [w for w in (words_a & words_b) if len(w) > 3 and w not in self.NEGATION_TERMS]
-        if neg_in_a != neg_in_b and len(shared_content_words) >= 2:
-            contradiction_score += 0.50
-            reasons.append(f"Negation polarity inversion on shared vocabulary: {', '.join(shared_content_words[:3])}")
-
-        return min(1.0, contradiction_score), reasons
-
-    def _compute_subject_overlap(self, text_a: str, text_b: str) -> float:
-        """Computes Jaccard overlap of non-stopword tokens."""
-        words_a = set(re.findall(r'\b\w{3,}\b', text_a.lower()))
-        words_b = set(re.findall(r'\b\w{3,}\b', text_b.lower()))
-        if not words_a or not words_b:
+    def _compute_subject_overlap(self, sent1: str, sent2: str) -> float:
+        """Calculates Jaccard overlap of non-stopword content tokens."""
+        w1 = set(re.findall(r'\b\w{4,}\b', sent1.lower()))
+        w2 = set(re.findall(r'\b\w{4,}\b', sent2.lower()))
+        if not w1 or not w2:
             return 0.0
-        return len(words_a & words_b) / len(words_a | words_b)
+        return len(w1.intersection(w2)) / len(w1.union(w2))
+
+    def _detect_lexical_contradiction(self, sent_curr: str, sent_prev: str) -> Tuple[float, List[str]]:
+        """
+        Rule-based lexical analyzer detecting polar antonyms, negation flips, and numeric discrepancies.
+        """
+        curr_lower = sent_curr.lower()
+        prev_lower = sent_prev.lower()
+        reasons = []
+        score = 0.0
+
+        # Check opposing polar semantic pairs
+        for w1, w2 in self.CONTRADICTING_PAIRS:
+            if (w1 in curr_lower and w2 in prev_lower) or (w2 in curr_lower and w1 in prev_lower):
+                reasons.append(f"Opposing antonym stems: '{w1}' vs '{w2}'")
+                score = max(score, 0.85)
+
+        # Check asymmetric negation on shared predicate
+        has_neg_curr = any(re.search(rf'\b{re.escape(neg)}\b', curr_lower) for neg in self.NEGATION_TERMS)
+        has_neg_prev = any(re.search(rf'\b{re.escape(neg)}\b', prev_lower) for neg in self.NEGATION_TERMS)
+
+        if has_neg_curr != has_neg_prev:
+            overlap = self._compute_subject_overlap(sent_curr, sent_prev)
+            if overlap > 0.20:
+                reasons.append("Negation polarity flip across shared subject predicate")
+                score = max(score, 0.75)
+
+        # Numerical discrepancy check on identical metric terms
+        nums_curr = re.findall(r'\b\d+(?:\.\d+)?%?\b', curr_lower)
+        nums_prev = re.findall(r'\b\d+(?:\.\d+)?%?\b', prev_lower)
+        if nums_curr and nums_prev and nums_curr != nums_prev:
+            overlap = self._compute_subject_overlap(sent_curr, sent_prev)
+            if overlap > 0.25:
+                reasons.append(f"Conflicting numerical values: {nums_curr} vs {nums_prev}")
+                score = max(score, 0.70)
+
+        return score, reasons
+
+    def _detect_contradiction_between(self, sent_curr: str, sent_prev: str) -> Tuple[float, List[str]]:
+        """Convenience method for testing pairwise contradiction."""
+        if self.use_nli and self.is_nli_active:
+            probs = self._predict_pairs_nli([(sent_prev, sent_curr)])
+            if probs is not None:
+                prob = float(probs[0, 0])
+                if prob > 0.50:
+                    return prob, [f"NLI Cross-Encoder contradiction (prob={prob:.2f})"]
+        return self._detect_lexical_contradiction(sent_curr, sent_prev)

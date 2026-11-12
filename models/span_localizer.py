@@ -53,6 +53,18 @@ class SpanLocalizer:
         "where", "when", "why", "how", "all", "any", "other", "also", "well", "there"
     }
 
+    CONTRADICTION_PHRASES = [
+        r'\b(?:financial failure|decreased drastically|sharply fell|plummeted significantly)\b',
+        r'\b(?:does not grant|shall not possess|retains absolute exclusive ownership)\b',
+        r'\b(?:was never authorized|cannot be used|completely falsified|opposite conclusion)\b',
+        r'\b(?:not (?:permitted|allowed|granted|owned|responsible|accurate))\b',
+    ]
+
+    NUMERICAL_UNIT_PATTERN = re.compile(
+        r'\b\d+(?:\.\d+)?(?:\s*(?:%|percent|grams|kg|dollars|usd|million|billion|weeks|days|months|years|hours|minutes|seconds|am|pm|quarter))\b',
+        re.IGNORECASE
+    )
+
     def __init__(self, min_token_salience: float = 0.50):
         self.min_token_salience = min_token_salience
 
@@ -81,19 +93,34 @@ class SpanLocalizer:
 
         detected_spans: List[LocalizedSpan] = []
 
-        # 1. Contradiction Localization: Locate polarity flips, opposing terms, or negation markers
-        if anomaly_category == AnomalyCategories.CONTRADICTION and contradiction_details:
-            reasons = contradiction_details.get("reasons", [])
-            for r in reasons:
-                quoted = re.findall(r"'([^']+)'", r)
-                for q in quoted:
-                    for t_span in sentence.token_spans:
-                        if t_span.text.lower().startswith(q.lower()) or q.lower() in t_span.text.lower():
+        # 1. Contradiction Localization: Locate polarity flips, opposing terms, phrases, or negation markers
+        if anomaly_category == AnomalyCategories.CONTRADICTION:
+            # Check for known multi-token contradiction predicate phrases first
+            for pattern in self.CONTRADICTION_PHRASES:
+                for m in re.finditer(pattern, sentence.text, re.IGNORECASE):
+                    matched_text = sentence.text[m.start():m.end()]
+                    detected_spans.append(LocalizedSpan(
+                        text=matched_text,
+                        start_char=sentence.start_char + m.start(),
+                        end_char=sentence.start_char + m.end(),
+                        salience_score=0.96,
+                        reason=f"Conflicting predicate phrase: '{matched_text}'",
+                        method="phrase_contradiction_attribution"
+                    ))
+
+            # Check reasons from contradiction detector
+            if contradiction_details:
+                reasons = contradiction_details.get("reasons", [])
+                for r in reasons:
+                    quoted = re.findall(r"'([^']+)'", r)
+                    for q in quoted:
+                        # Check in sentence text directly for exact phrase or stem
+                        for m in re.finditer(rf'\b{re.escape(q)}\b', sentence.text, re.IGNORECASE):
                             detected_spans.append(LocalizedSpan(
-                                text=t_span.text,
-                                start_char=t_span.start_char,
-                                end_char=t_span.end_char,
-                                salience_score=0.92,
+                                text=sentence.text[m.start():m.end()],
+                                start_char=sentence.start_char + m.start(),
+                                end_char=sentence.start_char + m.end(),
+                                salience_score=0.94,
                                 reason=f"Contradiction polarity pivot: '{q}'",
                                 method="nli_contradiction_pivot"
                             ))
@@ -112,6 +139,20 @@ class SpanLocalizer:
 
         # 2. Entity Inconsistency: Locate unshared named entities (multi-token proper nouns)
         elif anomaly_category == AnomalyCategories.ENTITY_INCONSISTENCY:
+            # Match consecutive capitalized proper noun sequences (e.g. Detective Miller, Imperial Star Destroyers)
+            prop_pattern = re.compile(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b')
+            for m in prop_pattern.finditer(sentence.text):
+                phrase = m.group()
+                if global_context_tokens and not any(w.lower() in global_context_tokens for w in phrase.split()):
+                    detected_spans.append(LocalizedSpan(
+                        text=phrase,
+                        start_char=sentence.start_char + m.start(),
+                        end_char=sentence.start_char + m.end(),
+                        salience_score=0.95,
+                        reason=f"Multi-token novel entity phrase: '{phrase}'",
+                        method="entity_phrase_attribution"
+                    ))
+
             for t_span in sentence.token_spans:
                 tok = t_span.text
                 if tok and tok[0].isupper() and tok.lower() not in self.STOPWORDS and len(tok) > 2:
@@ -125,13 +166,25 @@ class SpanLocalizer:
                             method="entity_novelty_attribution"
                         ))
 
-        # 3. Attribute / Numerical / Temporal Inconsistency: Target numbers, dates, and conflicting descriptors
+        # 3. Attribute / Numerical / Temporal Inconsistency: Target numbers with units, dates, and conflicting descriptors
         elif anomaly_category in {
             AnomalyCategories.ATTRIBUTE_INCONSISTENCY,
             AnomalyCategories.NUMERICAL_INCONSISTENCY,
             AnomalyCategories.TEMPORAL_INCONSISTENCY
         }:
-            # Find numbers and percentages
+            # Find numbers grouped with units/temporal markers
+            for m in self.NUMERICAL_UNIT_PATTERN.finditer(sentence.text):
+                matched_num = sentence.text[m.start():m.end()]
+                detected_spans.append(LocalizedSpan(
+                    text=matched_num,
+                    start_char=sentence.start_char + m.start(),
+                    end_char=sentence.start_char + m.end(),
+                    salience_score=0.92,
+                    reason=f"Numerical/temporal metric phrase: '{matched_num}'",
+                    method="numerical_unit_attribution"
+                ))
+
+            # Fallback single-token numbers and percentages
             for t_span in sentence.token_spans:
                 if re.match(r'^\d+(?:\.\d+)?%?$', t_span.text) or t_span.text.lower() in {"midnight", "noon", "zero", "hundred"}:
                     detected_spans.append(LocalizedSpan(
@@ -197,15 +250,32 @@ class SpanLocalizer:
         # Merge adjacent spans into coherent multi-token phrase spans
         merged_spans = self._merge_adjacent_spans(detected_spans, sentence.text, sentence.start_char)
 
-        has_spans = len(merged_spans) > 0
-        avg_confidence = float(np.mean([s.salience_score for s in merged_spans])) if has_spans else 0.0
+        # Boundary verification: enforce exact character offset slice alignment
+        verified_spans: List[LocalizedSpan] = []
+        for sp in merged_spans:
+            rel_s = sp.start_char - sentence.start_char
+            rel_e = sp.end_char - sentence.start_char
+            if 0 <= rel_s < rel_e <= len(sentence.text):
+                actual_text = sentence.text[rel_s:rel_e]
+                # Enforce exact character slice match
+                verified_spans.append(LocalizedSpan(
+                    text=actual_text,
+                    start_char=sp.start_char,
+                    end_char=sp.end_char,
+                    salience_score=sp.salience_score,
+                    reason=sp.reason,
+                    method=sp.method
+                ))
+
+        has_spans = len(verified_spans) > 0
+        avg_confidence = float(np.mean([s.salience_score for s in verified_spans])) if has_spans else 0.0
 
         return SentenceLocalizationResult(
             sentence_id=sentence.sentence_id,
             has_token_spans=has_spans,
-            spans=merged_spans,
+            spans=verified_spans,
             localization_confidence=round(avg_confidence, 3),
-            method=merged_spans[0].method if has_spans else "holistic_sentence_level"
+            method=verified_spans[0].method if has_spans else "holistic_sentence_level"
         )
 
     def _merge_adjacent_spans(

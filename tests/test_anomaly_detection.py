@@ -2,6 +2,10 @@
 Unit tests for DGSA Anomaly Detection and Scoring (Modules 4, 5, 6, 7).
 """
 
+import os
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+
 import unittest
 import numpy as np
 
@@ -54,7 +58,7 @@ class TestAnomalyDetection(unittest.TestCase):
         self.assertAlmostEqual(comp[0], 0.5, places=4)
 
     def test_contradiction_detection_rule(self):
-        detector = ContradictionDetector()
+        detector = ContradictionDetector(use_nli=False)
         sent1 = "The corporate profit increased by fifty percent this quarter."
         sent2 = "The corporate profit decreased by fifty percent this quarter."
         score, reasons = detector._detect_contradiction_between(sent1, sent2)

@@ -33,6 +33,7 @@ class AnnotatedDocument:
     domain: str
     text: str
     is_synthetic: bool
+    source: str = "synthetic"  # "synthetic" or "real_world"
     sentences: List[AnnotatedSentence] = field(default_factory=list)
 
 
@@ -64,17 +65,46 @@ class DatasetLoader:
                     end_char=s_data.get("end_char", len(s_data["text"]))
                 ))
 
+            is_synth = item.get("is_synthetic", True)
+            src = item.get("source", "synthetic" if is_synth else "real_world")
+
             docs.append(AnnotatedDocument(
                 doc_id=str(item.get("doc_id", len(docs))),
                 title=item.get("title", f"Doc_{len(docs)}"),
                 domain=item.get("domain", "general"),
                 text=item.get("text", " ".join(s.text for s in sentences)),
-                is_synthetic=item.get("is_synthetic", True),
+                is_synthetic=is_synth,
+                source=src,
                 sentences=sentences
             ))
 
-        logger.info(f"Loaded {len(docs)} annotated documents from {path}")
+        logger.info(f"Loaded {len(docs)} annotated documents from {path} (source: {src if docs else 'empty'})")
         return docs
+
+    @classmethod
+    def load_synthetic_benchmark(cls, data_dir: str | Path = "data/datasets") -> List[AnnotatedDocument]:
+        """Loads the synthetic research benchmark dataset."""
+        p = Path(data_dir) / "research_benchmark.json"
+        if not p.exists():
+            p = Path(data_dir) / "synthetic_benchmark.json"
+        return cls.load_from_json(p)
+
+    @classmethod
+    def load_real_world_benchmark(cls, data_dir: str | Path = "data/datasets") -> List[AnnotatedDocument]:
+        """Loads the human-curated real-world document benchmark dataset."""
+        p = Path(data_dir) / "real_world_benchmark.json"
+        if not p.exists():
+            raise FileNotFoundError(f"Real-world benchmark dataset not found at: {p}")
+        return cls.load_from_json(p)
+
+    @classmethod
+    def load_combined_dataset(cls, data_dir: str | Path = "data/datasets") -> List[AnnotatedDocument]:
+        """Loads and combines synthetic and real-world benchmark datasets."""
+        synth_docs = cls.load_synthetic_benchmark(data_dir)
+        real_docs = cls.load_real_world_benchmark(data_dir)
+        combined = synth_docs + real_docs
+        logger.info(f"Loaded combined benchmark suite: {len(synth_docs)} synthetic + {len(real_docs)} real-world = {len(combined)} total documents.")
+        return combined
 
     @classmethod
     def split_train_val_test(

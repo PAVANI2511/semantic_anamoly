@@ -23,14 +23,14 @@
 <body>
     <h1>Semantic Sentinel Analysis Report</h1>
     <div class="summary-box">
-        <h3>Executive Assessment: Moderate Anomaly Density: Notable topical or contextual fractures observed.</h3>
-        <p><b>Embedding Model:</b> sentence-transformers/all-mpnet-base-v2 | <b>Threshold:</b> 0.5 | <b>Latency:</b> 1039.75 ms</p>
-        <p><b>DGSA Formula:</b> A(i) = 0.40&middot;G(i) + 0.35&middot;L(i) + 0.25&middot;C(i)</p>
+        <h3>Executive Assessment: Severe Semantic Fragmentation: Substantial contradictions or topic disruptions detected.</h3>
+        <p><b>Embedding Model:</b> sentence-transformers/all-MiniLM-L6-v2 | <b>Threshold:</b> 0.5 | <b>Latency:</b> 523.26 ms</p>
+        <p><b>DGSA Formula:</b> A(i) = 0.35&middot;G(i) + 0.40&middot;L(i) + 0.25&middot;C(i)</p>
         <div class="grid">
             <div class="metric-card"><div class="metric-val">7</div><div class="metric-lbl">Total Sentences</div></div>
-            <div class="metric-card"><div class="metric-val">2</div><div class="metric-lbl">Anomalies Detected</div></div>
-            <div class="metric-card"><div class="metric-val">28.57%</div><div class="metric-lbl">Anomaly Rate</div></div>
-            <div class="metric-card"><div class="metric-val">5</div><div class="metric-lbl">Normal Sentences</div></div>
+            <div class="metric-card"><div class="metric-val">3</div><div class="metric-lbl">Anomalies Detected</div></div>
+            <div class="metric-card"><div class="metric-val">42.86%</div><div class="metric-lbl">Anomaly Rate</div></div>
+            <div class="metric-card"><div class="metric-val">4</div><div class="metric-lbl">Normal Sentences</div></div>
         </div>
     </div>
 
@@ -50,65 +50,65 @@
             
             <tr class="">
                 <td><b>#1</b></td>
-                <td>Apex Technologies recorded extraordinary commercial performance throughout the third fiscal quarter of 2026.</td>
+                <td>Total consolidated revenues for the fiscal year reached 307.4 billion dollars, representing an increase of 9 percent compared to the prior period.</td>
                 <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.380</b></td>
+                <td><b>0.311</b></td>
                 <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.38).</small></td>
+                <td><small>Sentence conforms to document semantics (Score: 0.31).</small></td>
             </tr>
             
-            <tr class="">
+            <tr class="table-warning">
                 <td><b>#2</b></td>
-                <td>Total enterprise revenues increased by 38 percent year-over-year, propelled by enterprise adoption of cloud analytics solutions.</td>
-                <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.338</b></td>
-                <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.34).</small></td>
+                <td>Operating income for the fiscal year increased to 84.3 billion dollars, reflecting a robust operating margin of 27 percent.<br><small style='color: #c53030;'><b>Attributed Spans:</b> <code>increased</code>, <code>reflecting</code></small></td>
+                <td><span class="badge-danger">ANOMALY</span></td>
+                <td><b>0.611</b></td>
+                <td>Contradiction</td>
+                <td><small>Model detected semantic contradiction with sentence #1: NLI Cross-Encoder detected contradiction with sentence #1 (Probability: 96.9%).</small></td>
             </tr>
             
             <tr class="">
                 <td><b>#3</b></td>
-                <td>Gross operating profit margins expanded across all geographic operating sectors due to rigorous supply chain efficiencies.</td>
+                <td>Enterprise Cloud delivered continuous momentum, generating operating profit of 1.7 billion dollars compared to an operating loss in the preceding year.</td>
                 <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.371</b></td>
+                <td><b>0.488</b></td>
                 <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.37).</small></td>
+                <td><small>Sentence conforms to document semantics (Score: 0.49).</small></td>
             </tr>
             
-            <tr class="">
+            <tr class="table-warning">
                 <td><b>#4</b></td>
-                <td>Operating cash flows reached record liquidity levels, empowering the company to fund ambitious research and development initiatives.</td>
-                <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.364</b></td>
-                <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.36).</small></td>
+                <td>Research and development expenditures rose by 5 percent to support ongoing innovations in generative artificial intelligence and tensor processors.<br><small style='color: #c53030;'><b>Attributed Spans:</b> <code>Research</code>, <code>development</code>, <code>rose</code>, <code>support</code></small></td>
+                <td><span class="badge-danger">ANOMALY</span></td>
+                <td><b>0.502</b></td>
+                <td>Contextual Inconsistency</td>
+                <td><small>Local contextual inconsistency is prominent (L=0.88), indicating low semantic similarity to immediate neighboring sentences.</small></td>
             </tr>
             
             <tr class="table-warning">
                 <td><b>#5</b></td>
-                <td>The company experienced total financial failure with overall enterprise revenues that decreased drastically by 40 percent during the exact same period.<br><small style='color: #c53030;'><b>Attributed Spans:</b> <code>experienced</code>, <code>financial failure</code>, <code>overall</code></small></td>
+                <td>Operating income for the fiscal year declined drastically to 12.1 billion dollars, representing a severe operating loss across all business segments.<br><small style='color: #c53030;'><b>Attributed Spans:</b> <code>declined drastically</code></small></td>
                 <td><span class="badge-danger">ANOMALY</span></td>
-                <td><b>0.790</b></td>
-                <td>Contextual Inconsistency</td>
-                <td><small>Local contextual inconsistency is prominent (L=0.95), indicating low semantic similarity to immediate neighboring sentences.</small></td>
+                <td><b>0.736</b></td>
+                <td>Contradiction</td>
+                <td><small>Model detected semantic contradiction with sentence #2: NLI Cross-Encoder detected contradiction with sentence #2 (Probability: 100.0%).</small></td>
             </tr>
             
             <tr class="">
                 <td><b>#6</b></td>
-                <td>Executive leadership announced an enhanced dividend payout schedule reflecting robust confidence in sustained multi-year balance sheet momentum.</td>
+                <td>Capital expenditures were primarily directed towards technical infrastructure, including server compute clusters and high-bandwidth network data centers.</td>
                 <td><span class="badge-success">NORMAL</span></td>
-                <td><b>0.439</b></td>
+                <td><b>0.390</b></td>
                 <td>Consistent</td>
-                <td><small>Sentence conforms to document semantics (Score: 0.44).</small></td>
+                <td><small>Sentence conforms to document semantics (Score: 0.39).</small></td>
             </tr>
             
-            <tr class="table-warning">
+            <tr class="">
                 <td><b>#7</b></td>
-                <td>Customer retention metrics among Fortune 500 accounts remained at an exceptional 99 percent compliance rate.<br><small style='color: #c53030;'><b>Attributed Spans:</b> <code>Customer</code>, <code>Fortune</code></small></td>
-                <td><span class="badge-danger">ANOMALY</span></td>
-                <td><b>0.527</b></td>
-                <td>Entity Inconsistency</td>
-                <td><small>Contains novel or unlinked entities: Fortune.</small></td>
+                <td>We expect capital investments to continue expanding as we scale our machine learning infrastructure to meet enterprise customer demand.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.409</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.41).</small></td>
             </tr>
             
         </tbody>

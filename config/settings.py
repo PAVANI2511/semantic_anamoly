@@ -7,10 +7,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Any, List
 
-# Avoid network timeouts when offline if models are cached
-os.environ.setdefault("HF_HUB_ENABLE_HF_TRANSFER", "0")
-if Path(os.path.expanduser("~/.cache/huggingface/hub")).exists():
+# Opt-in offline configuration via SEMANTIC_SENTINEL_OFFLINE environment variable
+if os.environ.get("SEMANTIC_SENTINEL_OFFLINE", "").strip().lower() in {"1", "true", "yes"}:
     os.environ["HF_HUB_OFFLINE"] = "1"
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
 # Base Project Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,10 +29,14 @@ for directory in [DATA_DIR, SAMPLE_DOCS_DIR, DATASETS_DIR, PROCESSED_DIR, OUTPUT
 @dataclass
 class ModelConfig:
     """Configuration for embedding and inference models."""
-    primary_embedding_model: str = "sentence-transformers/all-mpnet-base-v2"
+    primary_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    default_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    high_accuracy_embedding_model: str = "sentence-transformers/all-mpnet-base-v2"
     fast_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     nli_model_name: str = "cross-encoder/nli-deberta-v3-xsmall"
     primary_nli_model: str = "cross-encoder/nli-deberta-v3-xsmall"
+    default_nli_model: str = "cross-encoder/nli-deberta-v3-xsmall"
+    base_nli_model: str = "cross-encoder/nli-deberta-v3-base"
     use_nli: bool = True
     nli_fallback_enabled: bool = True
     device: str = "auto"  # "auto", "cuda", or "cpu"
@@ -41,14 +45,28 @@ class ModelConfig:
     cache_dir: Path = BASE_DIR / ".cache" / "models"
 
 
+class StandardDGSAWeights:
+    """
+    Standardized, research-verified DGSA component weight configurations.
+    Used uniformly across settings, Streamlit UI, comparative benchmarks, and ablation studies.
+    """
+    FULL_DGSA: Dict[str, float] = {"alpha": 0.35, "beta": 0.40, "gamma": 0.25}
+    GLOBAL_LOCAL: Dict[str, float] = {"alpha": 0.50, "beta": 0.50, "gamma": 0.00}
+    GLOBAL_CONTRADICTION: Dict[str, float] = {"alpha": 0.50, "beta": 0.00, "gamma": 0.50}
+    LOCAL_CONTRADICTION: Dict[str, float] = {"alpha": 0.00, "beta": 0.50, "gamma": 0.50}
+    GLOBAL_ONLY: Dict[str, float] = {"alpha": 1.00, "beta": 0.00, "gamma": 0.00}
+    LOCAL_ONLY: Dict[str, float] = {"alpha": 0.00, "beta": 1.00, "gamma": 0.00}
+    CONTRADICTION_ONLY: Dict[str, float] = {"alpha": 0.00, "beta": 0.00, "gamma": 1.00}
+
+
 @dataclass
 class DGSAParameters:
     """
     Mathematical weights and hyperparameters for DGSA scoring:
     A(i) = alpha * G(i) + beta * L(i) + gamma * C(i)
     """
-    alpha: float = 0.40  # Global context deviation weight
-    beta: float = 0.35   # Local contextual inconsistency weight
+    alpha: float = 0.35  # Global context deviation weight
+    beta: float = 0.40   # Local contextual inconsistency weight
     gamma: float = 0.25  # Contradiction / polarity deviation weight
     
     # Context window: number of neighboring sentences before & after to consider

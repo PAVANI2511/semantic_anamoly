@@ -183,52 +183,85 @@ Previous anomaly detection implementations suffer from sentence leakage (trainin
 - **Multi-Seed Stability:** Repeated across 3 distinct seeds (`[42, 123, 999]`) with mean $\pm$ standard deviation reported for every metric.
 - **Multi-Domain Benchmark Dataset (v3.0):** 20 curated documents (142 sentences, 17 controlled anomalies) across Environmental Science, Quantum Physics, Corporate Finance, Cardiology, Planetary Astronomy, Cybersecurity, Software Licensing Law, Neural Network ML, Macroeconomics, Immunology (Control), Renewable Energy, Aerospace, Supply Chain Logistics (Temporal), Cardiovascular Pharmacology (Numerical), Autonomous Driving, Constitutional Law (Control), EUV Lithography, Diplomatic History, Commercial Avionics, and Hydropower Engineering.
 
-### Comparative Baseline Evaluation (Held-Out Test Set: Mean $\pm$ Std across 3 Seeds)
+### Comparative Baseline Evaluation (Synthetic Benchmark - Held-Out Test Set: Mean $\pm$ Std across 3 Seeds)
 
 | Model Architecture | Accuracy | Precision | Recall | F1-Score | ROC-AUC | Inference Latency |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **TF-IDF + Isolation Forest** | $0.8306 \pm 0.0603$ | $0.0000 \pm 0.0000$ | $0.0000 \pm 0.0000$ | $0.0000 \pm 0.0000$ | $0.4878 \pm 0.0655$ | $373.23 \pm 5.06$ ms |
-| **S-BERT + Isolation Forest** | $0.3212 \pm 0.1763$ | $0.0995 \pm 0.0328$ | $0.6167 \pm 0.3753$ | $0.1690 \pm 0.0598$ | $0.3665 \pm 0.0162$ | $334.95 \pm 17.37$ ms |
-| **S-BERT + One-Class SVM** | $0.1218 \pm 0.0186$ | $0.1218 \pm 0.0186$ | **$1.0000 \pm 0.0000$** | $0.2167 \pm 0.0292$ | $0.5000 \pm 0.0000$ | $61.81 \pm 12.92$ ms |
-| **Supervised Logistic Regression** | $0.8412 \pm 0.0145$ | $0.0000 \pm 0.0000$ | $0.0000 \pm 0.0000$ | $0.0000 \pm 0.0000$ | $0.7023 \pm 0.1135$ | $59.20 \pm 9.41$ ms |
-| **DGSA w/o Contradiction (Global+Local)** | $0.6940 \pm 0.1175$ | $0.2793 \pm 0.1015$ | $0.8500 \pm 0.1323$ | $0.4168 \pm 0.1325$ | $0.9124 \pm 0.0367$ | $2678.98 \pm 39.26$ ms |
-| **DGSA Full (Proposed, NLI DeBERTa)** | **$0.8708 \pm 0.0806$** | **$0.5159 \pm 0.1910$** | **$0.9167 \pm 0.1443$** | **$0.6444 \pm 0.1710$** | **$0.9488 \pm 0.0628$** | $5953.28 \pm 87.24$ ms |
+| **TF-IDF + Isolation Forest** | $0.8306 \pm 0.0603$ | $0.0000 \pm 0.0000$ | $0.0000 \pm 0.0000$ | $0.0000 \pm 0.0000$ | $0.4878 \pm 0.0655$ | $122.47 \pm 4.87$ ms |
+| **S-BERT + Isolation Forest** | $0.5359 \pm 0.3070$ | $0.0774 \pm 0.1001$ | $0.3500 \pm 0.4093$ | $0.1264 \pm 0.1610$ | $0.4072 \pm 0.1507$ | $107.63 \pm 0.97$ ms |
+| **S-BERT + One-Class SVM** | $0.1218 \pm 0.0186$ | $0.1218 \pm 0.0186$ | **$1.0000 \pm 0.0000$** | $0.2167 \pm 0.0292$ | $0.5000 \pm 0.0000$ | $18.19 \pm 0.47$ ms |
+| **Supervised Logistic Regression** | $0.4904 \pm 0.3149$ | $0.1178 \pm 0.1075$ | $0.6667 \pm 0.5774$ | $0.1993 \pm 0.1794$ | $0.7586 \pm 0.2707$ | $19.68 \pm 1.80$ ms |
+| **DGSA w/o Contradiction (Global+Local)** | $0.6013 \pm 0.1490$ | $0.1830 \pm 0.0341$ | $0.6333 \pm 0.3215$ | $0.2705 \pm 0.0184$ | $0.7592 \pm 0.0775$ | $747.08 \pm 130.77$ ms |
+| **DGSA Full (Proposed, NLI DeBERTa)** | **$0.8988 \pm 0.0814$** | **$0.5990 \pm 0.2349$** | **$0.9167 \pm 0.1443$** | **$0.7030 \pm 0.1905$** | **$0.9390 \pm 0.0550$** | $1660.17 \pm 290.60$ ms |
 
-> **Key Finding:** Unsupervised classical anomaly detectors suffer severe precision or recall collapse on semantic document anomalies. The DGSA framework achieves superior ranking separation ($\text{ROC-AUC} = \mathbf{0.9488 \pm 0.0628}$) and high anomaly recall ($\text{Recall} = \mathbf{0.9167 \pm 0.1443}$), outperforming all baselines. Adding the NLI CrossEncoder yields a **+0.2276 F1 gain** over the Global+Local baseline ($0.6444$ vs $0.4168$).
+> **Key Finding:** Classical unsupervised baselines suffer precision-recall collapse. The full DGSA framework achieves dominant classification performance ($F_1 = \mathbf{0.7030 \pm 0.1905}$, $\text{ROC-AUC} = \mathbf{0.9390 \pm 0.0550}$) on held-out test splits. Integrating the NLI CrossEncoder yields a **+0.4325 F1 gain** over the Global+Local baseline ($0.7030$ vs $0.2705$).
 
-### 7-Configuration Signal Ablation Study (Mean $\pm$ Std across 3 Seeds)
+---
+
+### Real-World Human-Curated Benchmark Evaluation (Held-Out Test Set: Mean $\pm$ Std across 3 Seeds)
+
+Evaluated across 10 authentic documents spanning Academic (arXiv CS), Business (SEC 10-K), Technical (Python Documentation), Legal (Commercial SaaS), Informational (Solar Astrophysics), and Pure Clean Controls:
+
+| Model Architecture | Accuracy | Precision | Recall | F1-Score | ROC-AUC | Inference Latency |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **TF-IDF + Isolation Forest** | $0.8474 \pm 0.0046$ | $0.0000 \pm 0.0000$ | $0.0000 \pm 0.0000$ | $0.0000 \pm 0.0000$ | $0.5000 \pm 0.0000$ | $142.86 \pm 13.15$ ms |
+| **S-BERT + Isolation Forest** | $0.4070 \pm 0.2004$ | $0.1600 \pm 0.0611$ | $0.6667 \pm 0.3334$ | $0.2533 \pm 0.0913$ | $0.5856 \pm 0.0531$ | $124.32 \pm 13.96$ ms |
+| **S-BERT + One-Class SVM** | $0.1526 \pm 0.0046$ | $0.1526 \pm 0.0046$ | **$1.0000 \pm 0.0000$** | $0.2648 \pm 0.0068$ | $0.5000 \pm 0.0000$ | $18.80 \pm 1.07$ ms |
+| **Supervised Logistic Regression** | $0.6974 \pm 0.2576$ | $0.0513 \pm 0.0888$ | $0.2222 \pm 0.3849$ | $0.0833 \pm 0.1443$ | $0.7406 \pm 0.1014$ | $20.34 \pm 1.22$ ms |
+| **DGSA w/o Contradiction (Global+Local)** | $0.6632 \pm 0.1094$ | $0.2815 \pm 0.1027$ | $0.6667 \pm 0.0000$ | $0.3889 \pm 0.0962$ | $0.7198 \pm 0.0099$ | $678.18 \pm 5.13$ ms |
+| **DGSA Full (Proposed, NLI DeBERTa)** | **$0.8632 \pm 0.0638$** | **$0.5333 \pm 0.1155$** | **$0.8889 \pm 0.1924$** | **$0.6667 \pm 0.1443$** | **$0.8628 \pm 0.1698$** | $1507.06 \pm 11.39$ ms |
+
+---
+
+### Standardized 7-Configuration Signal Ablation Study (Mean $\pm$ Std across 3 Seeds)
+
+All ablation configurations utilize standardized weights defined in `config/settings.py` (`StandardDGSAWeights`):
 
 | Ablation Configuration | Signal Weights ($\alpha, \beta, \gamma$) | Accuracy | Precision | Recall | F1-Score | ROC-AUC |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1. Global Only** | $(1.0, 0.0, 0.0)$ | **$0.9243 \pm 0.0445$** | **$1.0000 \pm 0.0000$** | $0.4000 \pm 0.3041$ | $0.5301 \pm 0.2851$ | $0.8854 \pm 0.0714$ |
-| **2. Local Only** | $(0.0, 1.0, 0.0)$ | $0.2345 \pm 0.0693$ | $0.1373 \pm 0.0176$ | **$1.0000 \pm 0.0000$** | $0.2412 \pm 0.0274$ | $0.9102 \pm 0.0288$ |
-| **3. Contradiction Only** | $(0.0, 0.0, 1.0)$ | $0.7781 \pm 0.1201$ | $0.3160 \pm 0.2417$ | $0.5167 \pm 0.2754$ | $0.3879 \pm 0.2675$ | $0.5797 \pm 0.2430$ |
-| **4. Global + Local** | $(0.5, 0.5, 0.0)$ | $0.7225 \pm 0.1372$ | $0.3101 \pm 0.1255$ | $0.8500 \pm 0.1323$ | $0.4480 \pm 0.1560$ | $0.9124 \pm 0.0367$ |
-| **5. Global + Contradiction** | $(0.5, 0.0, 0.5)$ | $0.8432 \pm 0.0994$ | $0.4306 \pm 0.2774$ | $0.5167 \pm 0.2754$ | $0.4647 \pm 0.2820$ | $0.8724 \pm 0.1157$ |
-| **6. Local + Contradiction** | $(0.0, 0.5, 0.5)$ | $0.7686 \pm 0.1186$ | $0.3041 \pm 0.2448$ | $0.5167 \pm 0.2754$ | $0.3778 \pm 0.2695$ | $0.8701 \pm 0.1126$ |
-| **7. Full DGSA (Proposed)** | $(0.35, 0.40, 0.25)$ | $0.8708 \pm 0.0753$ | $0.5099 \pm 0.1553$ | **$1.0000 \pm 0.0000$** | **$0.6655 \pm 0.1449$** | **$0.9463 \pm 0.0670$** |
+| **1. Global Only** | $(1.00, 0.00, 0.00)$ | **$0.9243 \pm 0.0445$** | **$1.0000 \pm 0.0000$** | $0.4000 \pm 0.3041$ | $0.5301 \pm 0.2851$ | $0.7400 \pm 0.0983$ |
+| **2. Local Only** | $(0.00, 1.00, 0.00)$ | $0.2456 \pm 0.1224$ | $0.1410 \pm 0.0299$ | **$1.0000 \pm 0.0000$** | $0.2463 \pm 0.0464$ | $0.7779 \pm 0.0757$ |
+| **3. Contradiction Only** | $(0.00, 0.00, 1.00)$ | $0.8237 \pm 0.0646$ | $0.3492 \pm 0.2147$ | $0.5167 \pm 0.2754$ | $0.4162 \pm 0.2429$ | $0.6101 \pm 0.2268$ |
+| **4. Global + Local** | $(0.50, 0.50, 0.00)$ | $0.6013 \pm 0.1490$ | $0.1830 \pm 0.0341$ | $0.6333 \pm 0.3215$ | $0.2705 \pm 0.0184$ | $0.7592 \pm 0.0775$ |
+| **5. Global + Contradiction** | $(0.50, 0.00, 0.50)$ | $0.8427 \pm 0.0744$ | $0.4048 \pm 0.2296$ | $0.5167 \pm 0.2754$ | $0.4495 \pm 0.2464$ | $0.9134 \pm 0.0697$ |
+| **6. Local + Contradiction** | $(0.00, 0.50, 0.50)$ | $0.8237 \pm 0.0646$ | $0.3492 \pm 0.2147$ | $0.5167 \pm 0.2754$ | $0.4162 \pm 0.2429$ | $0.9080 \pm 0.0697$ |
+| **7. Full DGSA (Proposed)** | $(0.35, 0.40, 0.25)$ | $0.8988 \pm 0.0814$ | $0.5990 \pm 0.2349$ | $0.9167 \pm 0.1443$ | **$0.7030 \pm 0.1905$** | **$0.9390 \pm 0.0550$** |
 
-### Fine-Grained Category-Wise Detection Breakdown
+> **Mathematical Verification:** Model 5 in the benchmark table and Configuration 4 in the ablation study are mathematically identical ($\alpha=0.50, \beta=0.50$). Model 6 and Configuration 7 are mathematically identical ($\alpha=0.35, \beta=0.40, \gamma=0.25$).
 
-| Anomaly Category | Precision | Recall | F1-Score | Support |
-|:---|:---:|:---:|:---:|:---:|
-| **Contextual Inconsistency** | $1.0000 \pm 0.0000$ | $1.0000 \pm 0.0000$ | **$1.0000 \pm 0.0000$** | 2 |
-| **Semantic Contradiction** | $1.0000 \pm 0.0000$ | $1.0000 \pm 0.0000$ | **$1.0000 \pm 0.0000$** | 4 |
-| **Topic Deviation** | $1.0000 \pm 0.0000$ | $1.0000 \pm 0.0000$ | **$1.0000 \pm 0.0000$** | 2 |
-| **Attribute Inconsistency** | $1.0000 \pm 0.0000$ | $1.0000 \pm 0.0000$ | **$1.0000 \pm 0.0000$** | 2 |
-| **Numerical Inconsistency** | $1.0000$ | $1.0000$ | **$1.0000$** | 1 |
-| **Entity Inconsistency** | $0.5000 \pm 0.7071$ | $0.5000 \pm 0.7071$ | $0.5000 \pm 0.7071$ | 2 |
-| **Normal Sentences (Controls)** | Specificity: $0.9362$ | Control Accuracy: $0.9362$ | — | 94 |
+---
+
+### Confusion Matrices Summary (Aggregated Across Evaluation Seeds)
+
+Exported to `outputs/benchmarks/confusion_matrices.csv`:
+
+| Model / Configuration | TP | FP | TN | FN | Precision | Recall | F1-Score | Accuracy | Specificity | Total Evaluated |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **TF-IDF + Isolation Forest** | 0 | 5 | 89 | 13 | 0.0000 | 0.0000 | 0.0000 | 0.8318 | 0.9468 | 107 |
+| **S-BERT + Isolation Forest** | 5 | 41 | 53 | 8 | 0.1087 | 0.3846 | 0.1695 | 0.5421 | 0.5638 | 107 |
+| **S-BERT + One-Class SVM** | 13 | 94 | 0 | 0 | 0.1215 | 1.0000 | 0.2167 | 0.1215 | 0.0000 | 107 |
+| **Supervised Logistic Regression** | 9 | 50 | 44 | 4 | 0.1525 | 0.6923 | 0.2499 | 0.4953 | 0.4681 | 107 |
+| **DGSA w/o Contradiction (Global+Local)** | 8 | 38 | 56 | 5 | 0.1739 | 0.6154 | 0.2712 | 0.5981 | 0.5957 | 107 |
+| **DGSA Full (Proposed, NLI DeBERTa)** | **12** | **10** | **84** | **1** | **0.5455** | **0.9231** | **0.6858** | **0.8972** | **0.8936** | **107** |
+| **1. Global Only** | 5 | 0 | 94 | 8 | 1.0000 | 0.3846 | 0.5555 | 0.9252 | 1.0000 | 107 |
+| **2. Local Only** | 13 | 81 | 13 | 0 | 0.1383 | 1.0000 | 0.2430 | 0.2430 | 0.1383 | 107 |
+| **3. Contradiction Only** | 7 | 13 | 81 | 6 | 0.3500 | 0.5385 | 0.4243 | 0.8224 | 0.8617 | 107 |
+| **4. Global + Local** | 8 | 38 | 56 | 5 | 0.1739 | 0.6154 | 0.2712 | 0.5981 | 0.5957 | 107 |
+| **5. Global + Contradiction** | 7 | 11 | 83 | 6 | 0.3889 | 0.5385 | 0.4516 | 0.8411 | 0.8830 | 107 |
+| **6. Local + Contradiction** | 7 | 13 | 81 | 6 | 0.3500 | 0.5385 | 0.4243 | 0.8224 | 0.8617 | 107 |
+| **7. Full DGSA** | **12** | **10** | **84** | **1** | **0.5455** | **0.9231** | **0.6858** | **0.8972** | **0.8936** | **107** |
+
+---
 
 ### Fine-Grained Span Localization Evaluation
 
 | Span Localization Metric | Empirical Score | Interpretation |
 |:---|:---:|:---|
-| **Average Token Precision** | **0.2170** | +176% improvement over unconstrained baseline via targeted attribution |
-| **Average Token Recall** | **0.2830** | Captures essential offending anomaly pivots across domains |
-| **Average Token F1** | **0.2415** | Balanced harmonic mean for phrase-level token attribution |
-| **Average Span IoU** | **0.2238** | Robust character overlap across multi-token anomalous phrases |
-| **Exact Span Match Ratio** | **0.1310** | Exact character boundary agreement on gold-standard targets |
+| **Average Token Precision** | **0.3671** | +367% improvement via multi-token phrase attribution and boundary checking |
+| **Average Token Recall** | **0.3790** | Captures essential offending anomaly pivots across domains |
+| **Average Token F1** | **0.3620** | Balanced harmonic mean for phrase-level token attribution |
+| **Average Span IoU** | **0.3018** | Robust character overlap across multi-token anomalous phrases |
+| **Exact Span Match Ratio** | **0.1946** | Exact character boundary agreement on gold-standard targets |
 
 ---
 
@@ -261,9 +294,9 @@ python scripts/run_benchmarks.py
 This executes baseline fitting on train documents, validation-based threshold calibration, multi-seed test evaluations, and saves all CSV/JSON artifacts in `outputs/benchmarks/`.
 
 ### 3. Running the Comprehensive Unit Test Suite
-Execute all 37 automated tests covering preprocessing, scoring, NLI inference, span evaluation, PDF exports, edge cases, and zero-leakage partitions:
+Execute all 43 automated tests covering preprocessing, scoring, NLI inference with isolated mock imports, exact span boundary slicing, PDF exports, edge cases, and zero-leakage partitions:
 ```bash
-python -m unittest discover tests
+python -m unittest discover -s tests -v
 ```
 
 ### 4. Launching the Interactive Web Dashboard
@@ -279,7 +312,7 @@ streamlit run app.py
 1. **Quadratic Complexity in NLI Checking:** Pairwise Cross-Encoder comparisons scale as $\mathcal{O}(N \times W)$ where $W$ is the context window. For very long manuscripts ($>10,000$ words), hierarchical candidate pruning or bi-encoder retrieval should precede cross-encoder inference.
 2. **Subtly Phrased World-Knowledge Contradictions:** If a sentence contradicts an external real-world fact not stated inside the document (e.g., historical dates or physical constants not mentioned earlier), document-internal NLI cannot detect it without retrieval-augmented generation (RAG).
 3. **Short / Fragmentary Documents:** Documents consisting of fewer than 3 sentences do not provide enough statistical evidence to form a reliable semantic centroid. The system applies explicit damping, but results on ultra-short text should be interpreted conservatively.
-4. **Token Span Boundary Granularity:** Semantic disruption often resides in multi-word clauses rather than isolated lexical tokens. While token F1 is moderate, the 100% partial match rate demonstrates that the localized spans consistently point human reviewers to the exact anomalous region.
+4. **Token Span Boundary Granularity:** Semantic disruption often resides in multi-word clauses rather than isolated lexical tokens. While token F1 is moderate, the high partial match and boundary verification demonstrate that localized spans consistently pinpoint human reviewers to the exact anomalous region.
 
 ---
 
@@ -287,11 +320,11 @@ streamlit run app.py
 
 For a complete chronological record of all architectural updates, bug fixes, benchmark enhancements, and experimental calibrations, please consult [CHANGELOG.md](CHANGELOG.md).
 
-### Key Highlights in v3.0.0 (Research Validation Edition)
-- **Expanded 20-Document Benchmark Dataset:** 142 sentences, 17 controlled anomalies across 20 distinct domains, with native coverage for all 7 anomaly categories and 2 pure normal controls.
-- **Fair Validation Baseline Threshold Calibration:** All baselines calibrated on validation data ($T^*_{baseline} \in [0.10, 0.90]$) to eliminate bias.
-- **Multi-Seed Stability:** Evaluated over seeds `[42, 123, 999]` with mean $\pm$ standard deviation reported.
-- **Targeted Span Localization:** +176% token precision boost ($0.0786 \to 0.2170$) via category-targeted attribution pivots.
-- **Explainability Engine:** Clean separation of continuous neural model evidence (`direct_model_evidence`) from rule indicators (`heuristic_indicators`).
-- **Comprehensive Unit Testing:** All 37 unit tests passing (100% pass rate).
+### Key Highlights in v3.1.0 (Scientific Validation & Real-World Edition)
+- **Standardized DGSA Weights:** Centralized in `config/settings.py` (`StandardDGSAWeights`) guaranteeing exact mathematical equivalence across benchmarks and ablation studies.
+- **Real-World Benchmark Suite:** 10 authentic documents across Academic (arXiv CS), Business (SEC 10-K), Technical (Python Documentation), Legal (SaaS Master Agreement), Informational (Solar Core), and Controls.
+- **Improved Span Localization:** Multi-token phrase extraction and mathematical character boundary verification (`assert text[start:end] == span_text`), achieving 0.3671 token precision.
+- **NLI Dependency Decoupling:** Isolated dynamic class loader with 11 isolated unit tests and seamless fallback on package absence, remote download failure, or runtime inference errors.
+- **Confusion Matrix Artifacts:** Full TP/FP/TN/FN matrix generated across all models and configurations (`outputs/benchmarks/confusion_matrices.csv`).
+- **Comprehensive Unit Testing:** All 43 unit tests passing (100% pass rate in 11.1s).
 

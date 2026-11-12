@@ -136,8 +136,8 @@ with st.sidebar:
     custom_th = st.slider("Anomaly Threshold $T$", min_value=0.10, max_value=0.90, value=preset_threshold, step=0.05)
 
     with st.expander("Signal Weights Adjustment", expanded=False):
-        w_global = st.slider("Global Weight α (Topic)", 0.0, 1.0, 0.40, 0.05)
-        w_local = st.slider("Local Weight β (Context)", 0.0, 1.0, 0.35, 0.05)
+        w_global = st.slider("Global Weight α (Topic)", 0.0, 1.0, 0.35, 0.05)
+        w_local = st.slider("Local Weight β (Context)", 0.0, 1.0, 0.40, 0.05)
         w_contra = st.slider("Contradiction Weight γ", 0.0, 1.0, 0.25, 0.05)
         st.caption(f"Normalized sum: {w_global + w_local + w_contra:.2f}")
 

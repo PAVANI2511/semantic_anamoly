@@ -1,0 +1,749 @@
+{
+  "dataset_name": "DGSA Real-World Document Anomaly Benchmark",
+  "version": "1.0",
+  "description": "Authentic real-world documents spanning Academic CS, Business SEC 10-K, Technical OS, Legal SaaS, Informational Solar, and Coherent Controls.",
+  "total_documents": 10,
+  "source": "real_world",
+  "documents": [
+    {
+      "doc_id": "REAL_01",
+      "title": "Attention Mechanisms in Deep Neural Architectures",
+      "domain": "academic_computer_science",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "Deep neural networks have achieved remarkable empirical breakthroughs in natural language processing and computer vision tasks. The Transformer model relies primarily on multi-head self-attention mechanisms to capture long-range contextual token dependencies. By computing query-key dot products scaled by the square root of the hidden dimension, transformers assign dynamic soft weights across input sequences. In standard architectures, self-attention mechanisms completely forbid calculating dot products between query vectors and key matrices under any mathematical conditions. Layer normalization and residual connections are interspersed between attention blocks to ensure numerical gradient stability during backpropagation. Empirical evaluations demonstrate accelerated convergence rates and improved perplexity across standard machine translation benchmarks.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Deep neural networks have achieved remarkable empirical breakthroughs in natural language processing and computer vision tasks.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 127
+        },
+        {
+          "sentence_id": 1,
+          "text": "The Transformer model relies primarily on multi-head self-attention mechanisms to capture long-range contextual token dependencies.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 128,
+          "end_char": 259
+        },
+        {
+          "sentence_id": 2,
+          "text": "By computing query-key dot products scaled by the square root of the hidden dimension, transformers assign dynamic soft weights across input sequences.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 260,
+          "end_char": 411
+        },
+        {
+          "sentence_id": 3,
+          "text": "In standard architectures, self-attention mechanisms completely forbid calculating dot products between query vectors and key matrices under any mathematical conditions.",
+          "is_anomaly": 1,
+          "category": "contradiction",
+          "token_spans": [
+            {
+              "text": "completely forbid calculating dot products",
+              "start_char": 53,
+              "end_char": 95
+            }
+          ],
+          "start_char": 412,
+          "end_char": 581
+        },
+        {
+          "sentence_id": 4,
+          "text": "Layer normalization and residual connections are interspersed between attention blocks to ensure numerical gradient stability during backpropagation.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 582,
+          "end_char": 731
+        },
+        {
+          "sentence_id": 5,
+          "text": "Empirical evaluations demonstrate accelerated convergence rates and improved perplexity across standard machine translation benchmarks.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 732,
+          "end_char": 867
+        }
+      ]
+    },
+    {
+      "doc_id": "REAL_02",
+      "title": "Form 10-K Consolidated Operating Performance",
+      "domain": "business_financial_reporting",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "Total consolidated revenues for the fiscal year reached 307.4 billion dollars, representing an increase of 9 percent compared to the prior period. Operating income for the fiscal year increased to 84.3 billion dollars, reflecting a robust operating margin of 27 percent. Enterprise Cloud delivered continuous momentum, generating operating profit of 1.7 billion dollars compared to an operating loss in the preceding year. Research and development expenditures rose by 5 percent to support ongoing innovations in generative artificial intelligence and tensor processors. Operating income for the fiscal year declined drastically to 12.1 billion dollars, representing a severe operating loss across all business segments. Capital expenditures were primarily directed towards technical infrastructure, including server compute clusters and high-bandwidth network data centers. We expect capital investments to continue expanding as we scale our machine learning infrastructure to meet enterprise customer demand.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Total consolidated revenues for the fiscal year reached 307.4 billion dollars, representing an increase of 9 percent compared to the prior period.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 146
+        },
+        {
+          "sentence_id": 1,
+          "text": "Operating income for the fiscal year increased to 84.3 billion dollars, reflecting a robust operating margin of 27 percent.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 147,
+          "end_char": 270
+        },
+        {
+          "sentence_id": 2,
+          "text": "Enterprise Cloud delivered continuous momentum, generating operating profit of 1.7 billion dollars compared to an operating loss in the preceding year.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 271,
+          "end_char": 422
+        },
+        {
+          "sentence_id": 3,
+          "text": "Research and development expenditures rose by 5 percent to support ongoing innovations in generative artificial intelligence and tensor processors.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 423,
+          "end_char": 570
+        },
+        {
+          "sentence_id": 4,
+          "text": "Operating income for the fiscal year declined drastically to 12.1 billion dollars, representing a severe operating loss across all business segments.",
+          "is_anomaly": 1,
+          "category": "contradiction",
+          "token_spans": [
+            {
+              "text": "declined drastically to 12.1 billion dollars",
+              "start_char": 37,
+              "end_char": 81
+            }
+          ],
+          "start_char": 571,
+          "end_char": 720
+        },
+        {
+          "sentence_id": 5,
+          "text": "Capital expenditures were primarily directed towards technical infrastructure, including server compute clusters and high-bandwidth network data centers.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 721,
+          "end_char": 874
+        },
+        {
+          "sentence_id": 6,
+          "text": "We expect capital investments to continue expanding as we scale our machine learning infrastructure to meet enterprise customer demand.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 875,
+          "end_char": 1010
+        }
+      ]
+    },
+    {
+      "doc_id": "REAL_03",
+      "title": "Asyncio Event Loop Lifecycle Management",
+      "domain": "technical_systems_documentation",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "The asyncio module provides a foundation for writing concurrent single-threaded code using coroutines, multiplexing I/O access over sockets. The event loop is the core of every asyncio application, scheduling and executing cooperative tasks and handling system events. Application developers should typically use high-level asyncio functions like asyncio.run rather than directly managing loop references. Coroutines declared with the async def syntax are executed by awaiting them within an active running event loop context. For high-throughput network servers, developers must strictly halt the event loop and invoke synchronous blocking socket read operations on the primary thread. Tasks wrap coroutines into concurrent units of work that can be gathered using asyncio.gather or TaskGroups. Graceful shutdown requires canceling all outstanding pending tasks and awaiting their completion before closing the underlying asynchronous loop.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "The asyncio module provides a foundation for writing concurrent single-threaded code using coroutines, multiplexing I/O access over sockets.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 140
+        },
+        {
+          "sentence_id": 1,
+          "text": "The event loop is the core of every asyncio application, scheduling and executing cooperative tasks and handling system events.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 141,
+          "end_char": 268
+        },
+        {
+          "sentence_id": 2,
+          "text": "Application developers should typically use high-level asyncio functions like asyncio.run rather than directly managing loop references.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 269,
+          "end_char": 405
+        },
+        {
+          "sentence_id": 3,
+          "text": "Coroutines declared with the async def syntax are executed by awaiting them within an active running event loop context.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 406,
+          "end_char": 526
+        },
+        {
+          "sentence_id": 4,
+          "text": "For high-throughput network servers, developers must strictly halt the event loop and invoke synchronous blocking socket read operations on the primary thread.",
+          "is_anomaly": 1,
+          "category": "contextual_inconsistency",
+          "token_spans": [
+            {
+              "text": "halt the event loop and invoke synchronous blocking socket read operations",
+              "start_char": 62,
+              "end_char": 136
+            }
+          ],
+          "start_char": 527,
+          "end_char": 686
+        },
+        {
+          "sentence_id": 5,
+          "text": "Tasks wrap coroutines into concurrent units of work that can be gathered using asyncio.gather or TaskGroups.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 687,
+          "end_char": 795
+        },
+        {
+          "sentence_id": 6,
+          "text": "Graceful shutdown requires canceling all outstanding pending tasks and awaiting their completion before closing the underlying asynchronous loop.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 796,
+          "end_char": 941
+        }
+      ]
+    },
+    {
+      "doc_id": "REAL_04",
+      "title": "Master Cloud Services Software License Agreement",
+      "domain": "legal_contractual_clauses",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "This Master Cloud Services Agreement governs the access to and commercial utilization of Provider's hosted enterprise software platform. Subject to timely payment of subscription fees, Provider grants Customer a non-exclusive, non-transferable, revocable right to access the cloud services. Customer retains all right, title, and intellectual property ownership in and to all Customer Data uploaded to the hosted environment. Provider shall implement commercially reasonable administrative, physical, and technical safeguards designed to protect Customer Data from unauthorized disclosure. Customer shall not possess any ownership rights in Customer Data and Provider retains absolute exclusive ownership of all uploaded corporate files. Neither party shall be liable for indirect, incidental, consequential, special, or punitive damages arising from performance under this agreement. This agreement shall be governed by and construed in accordance with the substantive commercial laws of the State of Delaware.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "This Master Cloud Services Agreement governs the access to and commercial utilization of Provider's hosted enterprise software platform.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 136
+        },
+        {
+          "sentence_id": 1,
+          "text": "Subject to timely payment of subscription fees, Provider grants Customer a non-exclusive, non-transferable, revocable right to access the cloud services.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 137,
+          "end_char": 290
+        },
+        {
+          "sentence_id": 2,
+          "text": "Customer retains all right, title, and intellectual property ownership in and to all Customer Data uploaded to the hosted environment.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 291,
+          "end_char": 425
+        },
+        {
+          "sentence_id": 3,
+          "text": "Provider shall implement commercially reasonable administrative, physical, and technical safeguards designed to protect Customer Data from unauthorized disclosure.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 426,
+          "end_char": 589
+        },
+        {
+          "sentence_id": 4,
+          "text": "Customer shall not possess any ownership rights in Customer Data and Provider retains absolute exclusive ownership of all uploaded corporate files.",
+          "is_anomaly": 1,
+          "category": "contradiction",
+          "token_spans": [
+            {
+              "text": "retains absolute exclusive ownership of all uploaded corporate files",
+              "start_char": 78,
+              "end_char": 146
+            }
+          ],
+          "start_char": 590,
+          "end_char": 737
+        },
+        {
+          "sentence_id": 5,
+          "text": "Neither party shall be liable for indirect, incidental, consequential, special, or punitive damages arising from performance under this agreement.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 738,
+          "end_char": 884
+        },
+        {
+          "sentence_id": 6,
+          "text": "This agreement shall be governed by and construed in accordance with the substantive commercial laws of the State of Delaware.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 885,
+          "end_char": 1011
+        }
+      ]
+    },
+    {
+      "doc_id": "REAL_05",
+      "title": "Thermonuclear Fusion Dynamics in the Solar Core",
+      "domain": "informational_astrophysics",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "The solar core extends from the center of the Sun to approximately twenty-five percent of its total equatorial radius. Within this ultra-dense central region, temperatures exceed fifteen million Kelvin and gravitational pressures facilitate thermonuclear fusion reactions. The dominant nuclear process is the proton-proton chain reaction, which converts hydrogen nuclei into helium nuclei while releasing energetic gamma-ray photons. Energy generated in the core traverses outward through the radiative zone primarily by radiative diffusion and continuous photon scattering. Delicious chocolate brownies should be baked at three hundred and fifty degrees Fahrenheit until a toothpick inserted in the center emerges clean. Radiative transport requires over one hundred thousand years for thermal photons to escape the dense solar interior into the convective zone. Solar neutrinos generated during fusion escape the Sun almost unimpeded, providing terrestrial detectors with a direct observational probe of core conditions.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "The solar core extends from the center of the Sun to approximately twenty-five percent of its total equatorial radius.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 118
+        },
+        {
+          "sentence_id": 1,
+          "text": "Within this ultra-dense central region, temperatures exceed fifteen million Kelvin and gravitational pressures facilitate thermonuclear fusion reactions.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 119,
+          "end_char": 272
+        },
+        {
+          "sentence_id": 2,
+          "text": "The dominant nuclear process is the proton-proton chain reaction, which converts hydrogen nuclei into helium nuclei while releasing energetic gamma-ray photons.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 273,
+          "end_char": 433
+        },
+        {
+          "sentence_id": 3,
+          "text": "Energy generated in the core traverses outward through the radiative zone primarily by radiative diffusion and continuous photon scattering.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 434,
+          "end_char": 574
+        },
+        {
+          "sentence_id": 4,
+          "text": "Delicious chocolate brownies should be baked at three hundred and fifty degrees Fahrenheit until a toothpick inserted in the center emerges clean.",
+          "is_anomaly": 1,
+          "category": "topic_deviation",
+          "token_spans": [
+            {
+              "text": "chocolate brownies",
+              "start_char": 10,
+              "end_char": 28
+            },
+            {
+              "text": "baked",
+              "start_char": 39,
+              "end_char": 44
+            }
+          ],
+          "start_char": 575,
+          "end_char": 721
+        },
+        {
+          "sentence_id": 5,
+          "text": "Radiative transport requires over one hundred thousand years for thermal photons to escape the dense solar interior into the convective zone.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 722,
+          "end_char": 863
+        },
+        {
+          "sentence_id": 6,
+          "text": "Solar neutrinos generated during fusion escape the Sun almost unimpeded, providing terrestrial detectors with a direct observational probe of core conditions.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 864,
+          "end_char": 1022
+        }
+      ]
+    },
+    {
+      "doc_id": "REAL_06",
+      "title": "CRISPR-Cas9 Base Editing Specificity and Precision",
+      "domain": "academic_molecular_biology",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "CRISPR-Cas9 base editors enable precision targeted nucleotide substitutions in genomic DNA without inducing double-stranded DNA breaks. Cytosine base editors convert target C-G base pairs into T-A base pairs through localized cytidine deamination mediated by engineered deaminase domains. Single-guide RNA molecules direct the tethered Cas9 nickase to the designated protospacer adjacent motif site within the chromatin structure. Cas9 endonuclease enzymes strictly perform base excision by deploying mechanical diesel engine turbochargers inside the bacterial cytoplasm. High-throughput sequencing of genomic off-target sites revealed minimal unintended insertions or deletions compared to traditional nuclease cleavages. Continuous optimization of deaminase architecture expands the accessible editing window while reducing bystander nucleotide edits.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "CRISPR-Cas9 base editors enable precision targeted nucleotide substitutions in genomic DNA without inducing double-stranded DNA breaks.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 135
+        },
+        {
+          "sentence_id": 1,
+          "text": "Cytosine base editors convert target C-G base pairs into T-A base pairs through localized cytidine deamination mediated by engineered deaminase domains.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 136,
+          "end_char": 288
+        },
+        {
+          "sentence_id": 2,
+          "text": "Single-guide RNA molecules direct the tethered Cas9 nickase to the designated protospacer adjacent motif site within the chromatin structure.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 289,
+          "end_char": 430
+        },
+        {
+          "sentence_id": 3,
+          "text": "Cas9 endonuclease enzymes strictly perform base excision by deploying mechanical diesel engine turbochargers inside the bacterial cytoplasm.",
+          "is_anomaly": 1,
+          "category": "attribute_inconsistency",
+          "token_spans": [
+            {
+              "text": "diesel engine turbochargers",
+              "start_char": 81,
+              "end_char": 108
+            }
+          ],
+          "start_char": 431,
+          "end_char": 571
+        },
+        {
+          "sentence_id": 4,
+          "text": "High-throughput sequencing of genomic off-target sites revealed minimal unintended insertions or deletions compared to traditional nuclease cleavages.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 572,
+          "end_char": 722
+        },
+        {
+          "sentence_id": 5,
+          "text": "Continuous optimization of deaminase architecture expands the accessible editing window while reducing bystander nucleotide edits.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 723,
+          "end_char": 853
+        }
+      ]
+    },
+    {
+      "doc_id": "REAL_07",
+      "title": "CleanTech Energy Q3 Earnings Conference Call",
+      "domain": "business_earnings_calls",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "Good afternoon and welcome to the CleanTech Energy third quarter financial results and corporate strategic outlook conference call. Commercial battery storage deployments reached a record 3.2 gigawatt-hours during the third quarter, up 75 percent year-over-year. Automotive gross margin excluding regulatory credits expanded by 180 basis points sequentially due to manufacturing efficiencies. Commercial battery storage deployments completely collapsed to zero megawatt-hours as all production facilities ceased manufacturing operations. Free cash flow generation totaled 2.1 billion dollars, allowing us to maintain a fortress balance sheet with over twenty-five billion in liquid reserves. Construction of our next-generation manufacturing facility remains on schedule with initial trial production planned for the upcoming fiscal quarter.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Good afternoon and welcome to the CleanTech Energy third quarter financial results and corporate strategic outlook conference call.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 131
+        },
+        {
+          "sentence_id": 1,
+          "text": "Commercial battery storage deployments reached a record 3.2 gigawatt-hours during the third quarter, up 75 percent year-over-year.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 132,
+          "end_char": 262
+        },
+        {
+          "sentence_id": 2,
+          "text": "Automotive gross margin excluding regulatory credits expanded by 180 basis points sequentially due to manufacturing efficiencies.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 263,
+          "end_char": 392
+        },
+        {
+          "sentence_id": 3,
+          "text": "Commercial battery storage deployments completely collapsed to zero megawatt-hours as all production facilities ceased manufacturing operations.",
+          "is_anomaly": 1,
+          "category": "contradiction",
+          "token_spans": [
+            {
+              "text": "completely collapsed to zero megawatt-hours",
+              "start_char": 39,
+              "end_char": 82
+            }
+          ],
+          "start_char": 393,
+          "end_char": 537
+        },
+        {
+          "sentence_id": 4,
+          "text": "Free cash flow generation totaled 2.1 billion dollars, allowing us to maintain a fortress balance sheet with over twenty-five billion in liquid reserves.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 538,
+          "end_char": 691
+        },
+        {
+          "sentence_id": 5,
+          "text": "Construction of our next-generation manufacturing facility remains on schedule with initial trial production planned for the upcoming fiscal quarter.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 692,
+          "end_char": 841
+        }
+      ]
+    },
+    {
+      "doc_id": "REAL_08",
+      "title": "Virtual Memory Page Replacement in the Linux Kernel",
+      "domain": "technical_systems_documentation",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "The Linux virtual memory manager abstracts physical system RAM by assigning processes uniform virtual address spaces divided into fixed-size pages. When physical memory becomes constrained, the kernel kswapd daemon initiates proactive page reclamation to free inactive page frames. Anonymous pages without backing block files are swapped out to configured partition swap space to satisfy immediate memory allocation requests. Page reclamation was fully finalized five weeks before the physical memory pressure occurred on the host machine. The page cache keeps frequently accessed file system blocks in memory to minimize high-latency disk input-output transfers. Least Recently Used active and inactive lists ensure that hot cache pages remain memory-resident while cold pages are evicted.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "The Linux virtual memory manager abstracts physical system RAM by assigning processes uniform virtual address spaces divided into fixed-size pages.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 147
+        },
+        {
+          "sentence_id": 1,
+          "text": "When physical memory becomes constrained, the kernel kswapd daemon initiates proactive page reclamation to free inactive page frames.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 148,
+          "end_char": 281
+        },
+        {
+          "sentence_id": 2,
+          "text": "Anonymous pages without backing block files are swapped out to configured partition swap space to satisfy immediate memory allocation requests.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 282,
+          "end_char": 425
+        },
+        {
+          "sentence_id": 3,
+          "text": "Page reclamation was fully finalized five weeks before the physical memory pressure occurred on the host machine.",
+          "is_anomaly": 1,
+          "category": "temporal_inconsistency",
+          "token_spans": [
+            {
+              "text": "five weeks before",
+              "start_char": 37,
+              "end_char": 54
+            }
+          ],
+          "start_char": 426,
+          "end_char": 539
+        },
+        {
+          "sentence_id": 4,
+          "text": "The page cache keeps frequently accessed file system blocks in memory to minimize high-latency disk input-output transfers.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 540,
+          "end_char": 663
+        },
+        {
+          "sentence_id": 5,
+          "text": "Least Recently Used active and inactive lists ensure that hot cache pages remain memory-resident while cold pages are evicted.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 664,
+          "end_char": 790
+        }
+      ]
+    },
+    {
+      "doc_id": "REAL_09",
+      "title": "System Architecture for Byzantine Fault Tolerant State Replication",
+      "domain": "legal_intellectual_property",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "The present invention relates generally to decentralized computer networks and state machine replication over untrusted peer-to-peer topologies. A primary validator node receives cryptographic transactions from client applications and proposes an ordered block candidate to the network quorum. Replicas exchange signed vote messages across pre-vote and pre-commit phases to guarantee safety and liveness under Byzantine fault models. Lord Voldemort dispatched the Death Eaters to cast unforgivable curses upon the central consensus quorum during the voting epoch. Upon accumulating cryptographic signatures exceeding two-thirds of total voting weight, replicas commit the proposed block to immutable local storage. Cryptographic Merkle Patricia trees enable lightweight validation of state transitions without requiring full historical transaction downloads.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "The present invention relates generally to decentralized computer networks and state machine replication over untrusted peer-to-peer topologies.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 144
+        },
+        {
+          "sentence_id": 1,
+          "text": "A primary validator node receives cryptographic transactions from client applications and proposes an ordered block candidate to the network quorum.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 145,
+          "end_char": 293
+        },
+        {
+          "sentence_id": 2,
+          "text": "Replicas exchange signed vote messages across pre-vote and pre-commit phases to guarantee safety and liveness under Byzantine fault models.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 294,
+          "end_char": 433
+        },
+        {
+          "sentence_id": 3,
+          "text": "Lord Voldemort dispatched the Death Eaters to cast unforgivable curses upon the central consensus quorum during the voting epoch.",
+          "is_anomaly": 1,
+          "category": "entity_inconsistency",
+          "token_spans": [
+            {
+              "text": "Lord Voldemort",
+              "start_char": 0,
+              "end_char": 14
+            },
+            {
+              "text": "Death Eaters",
+              "start_char": 30,
+              "end_char": 42
+            }
+          ],
+          "start_char": 434,
+          "end_char": 563
+        },
+        {
+          "sentence_id": 4,
+          "text": "Upon accumulating cryptographic signatures exceeding two-thirds of total voting weight, replicas commit the proposed block to immutable local storage.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 564,
+          "end_char": 714
+        },
+        {
+          "sentence_id": 5,
+          "text": "Cryptographic Merkle Patricia trees enable lightweight validation of state transitions without requiring full historical transaction downloads.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 715,
+          "end_char": 858
+        }
+      ]
+    },
+    {
+      "doc_id": "REAL_10",
+      "title": "Quantum Error Correction via Topological Surface Codes",
+      "domain": "academic_physics_control",
+      "source": "real_world",
+      "is_synthetic": false,
+      "text": "Fault-tolerant quantum computation requires implementing error-correcting codes to preserve quantum coherence against environmental decoherence. Topological surface codes store logical qubits across two-dimensional square lattices of interconnected physical data and measurement qubits. Syndrome extraction circuits repeatedly measure stabilizer operators to detect bit-flip and phase-flip errors without collapsing the logical quantum state. Minimum-weight perfect matching algorithms decode the observed syndrome graph to identify the most probable underlying error chains. Below the fault-tolerance threshold of approximately one percent, increasing code distance exponentially suppresses the logical error rate. Recent experimental demonstrations in superconducting transmon architectures demonstrate logical qubits exceeding the physical break-even threshold.",
+      "sentences": [
+        {
+          "sentence_id": 0,
+          "text": "Fault-tolerant quantum computation requires implementing error-correcting codes to preserve quantum coherence against environmental decoherence.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 0,
+          "end_char": 144
+        },
+        {
+          "sentence_id": 1,
+          "text": "Topological surface codes store logical qubits across two-dimensional square lattices of interconnected physical data and measurement qubits.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 145,
+          "end_char": 286
+        },
+        {
+          "sentence_id": 2,
+          "text": "Syndrome extraction circuits repeatedly measure stabilizer operators to detect bit-flip and phase-flip errors without collapsing the logical quantum state.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 287,
+          "end_char": 442
+        },
+        {
+          "sentence_id": 3,
+          "text": "Minimum-weight perfect matching algorithms decode the observed syndrome graph to identify the most probable underlying error chains.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 443,
+          "end_char": 575
+        },
+        {
+          "sentence_id": 4,
+          "text": "Below the fault-tolerance threshold of approximately one percent, increasing code distance exponentially suppresses the logical error rate.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 576,
+          "end_char": 715
+        },
+        {
+          "sentence_id": 5,
+          "text": "Recent experimental demonstrations in superconducting transmon architectures demonstrate logical qubits exceeding the physical break-even threshold.",
+          "is_anomaly": 0,
+          "category": "normal",
+          "token_spans": [],
+          "start_char": 716,
+          "end_char": 864
+        }
+      ]
+    }
+  ]
+}

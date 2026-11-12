@@ -61,6 +61,21 @@ class TestDatasetLoader(unittest.TestCase):
         self.assertTrue(doc0.is_synthetic)
         self.assertGreater(len(doc0.sentences), 0)
 
+    def test_load_real_world_benchmark(self):
+        docs = DatasetLoader.load_real_world_benchmark("data/datasets")
+        self.assertEqual(len(docs), 10)
+        doc0 = docs[0]
+        self.assertEqual(doc0.doc_id, "REAL_01")
+        self.assertFalse(doc0.is_synthetic)
+        self.assertEqual(doc0.source, "real_world")
+        self.assertGreater(len(doc0.sentences), 0)
+
+    def test_load_combined_dataset(self):
+        combined = DatasetLoader.load_combined_dataset("data/datasets")
+        self.assertEqual(len(combined), 30)  # 20 synthetic + 10 real-world
+        sources = {d.source for d in combined}
+        self.assertEqual(sources, {"synthetic", "real_world"})
+
     def test_zero_document_leakage_split(self):
         docs = DatasetLoader.load_from_json("data/datasets/synthetic_benchmark.json")
         train_docs, test_docs = DatasetLoader.split_train_test(docs, test_ratio=0.40, random_seed=42)

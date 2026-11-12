@@ -1,5 +1,5 @@
 {
-  "experiment_timestamp": "2026-11-12 04:05:55 UTC",
+  "experiment_timestamp": "2026-11-12 15:21:02 UTC",
   "system_environment": {
     "os": "Windows-11-10.0.26300-SP0",
     "python_version": "3.14.4 (tags/v3.14.4:23116f9, Apr  7 2026, 14:10:54) [MSC v.1944 64 bit (AMD64)]",
@@ -9,22 +9,22 @@
     "sklearn_version": "1.8.0"
   },
   "dgsa_architecture": {
-    "embedding_model": "sentence-transformers/all-mpnet-base-v2",
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
     "contradiction_model": "cross-encoder/nli-deberta-v3-xsmall",
     "active_contradiction_backend": "nli_transformer",
     "is_nli_verified": true,
     "weights": {
-      "alpha_global": 0.4,
-      "beta_local": 0.35,
+      "alpha_global": 0.35,
+      "beta_local": 0.4,
       "gamma_contradiction": 0.25
     },
     "local_window_size": 2,
     "scoring_formula": "A(i) = alpha * G(i) + beta * L(i) + gamma * C(i)"
   },
   "experimental_design": {
-    "dataset_name": "DGSA Multi-Domain Semantic Anomaly Benchmark",
-    "dataset_version": "3.0",
-    "total_documents": 20,
+    "dataset_name": "DGSA Research & Real-World Anomaly Benchmark Suite",
+    "dataset_version": "3.1",
+    "total_documents": 30,
     "seeds_evaluated": [
       42,
       123,

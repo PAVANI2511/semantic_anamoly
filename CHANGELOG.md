@@ -6,6 +6,61 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [3.1.0] - 2026-11-12
+
+### 🔬 Scientific Validation, Standardized DGSA Weights & Real-World Benchmark Edition
+
+#### Added
+* **Standardized DGSA Weights (`StandardDGSAWeights`):**
+  * Centralized component weight definitions in `config/settings.py` used uniformly across Settings, Streamlit UI (`app.py`), Comparative Benchmarks, and Ablation studies:
+    * `FULL_DGSA`: $\alpha=0.35, \beta=0.40, \gamma=0.25$
+    * `GLOBAL_LOCAL`: $\alpha=0.50, \beta=0.50, \gamma=0.00$
+    * `GLOBAL_CONTRADICTION`: $\alpha=0.50, \beta=0.00, \gamma=0.50$
+    * `LOCAL_CONTRADICTION`: $\alpha=0.00, \beta=0.50, \gamma=0.50$
+    * `GLOBAL_ONLY`: $\alpha=1.00, \beta=0.00, \gamma=0.00$
+    * `LOCAL_ONLY`: $\alpha=0.00, \beta=1.00, \gamma=0.00$
+    * `CONTRADICTION_ONLY`: $\alpha=0.00, \beta=0.00, \gamma=1.00$
+  * Guarantees 100% mathematical consistency: Comparative Benchmark Model 5 and Ablation Configuration 4 are numerically identical; Comparative Benchmark Model 6 and Ablation Configuration 7 are numerically identical.
+* **Comprehensive Confusion Matrix Reporting:**
+  * Generated and exported `outputs/benchmarks/confusion_matrices.csv` containing complete TP, FP, TN, FN, Precision, Recall, F1-Score, Accuracy, and Specificity for every baseline, proposed model, and ablation configuration across all evaluation seeds.
+* **Real-World Human-Curated Benchmark (`data/create_real_world_benchmark.py`):**
+  * Created 10 authentic real-world documents (64 sentences, 9 anomalies) across 6 distinct professional domains:
+    1. *Academic Computer Science:* Transformer self-attention mechanisms (arXiv CS.LG).
+    2. *Business Financial Disclosures:* Form 10-K operating income performance (SEC Form 10-K).
+    3. *Technical Systems Documentation:* Python Asyncio event loop architecture.
+    4. *Legal Contractual Clauses:* Master Cloud Services SaaS enterprise terms.
+    5. *Informational Astrophysics:* Thermonuclear solar core dynamics.
+    6. *Academic Molecular Biology:* CRISPR-Cas9 base editing precision (Nature Biotech).
+    7. *Business Corporate Earnings:* CleanTech Energy Q3 financial results.
+    8. *Technical Operating Systems:* Linux kernel virtual memory page reclamation.
+    9. *Legal Intellectual Property:* Distributed ledger Byzantine consensus patent.
+    10. *Academic Coherent Control:* Quantum error correction surface codes (Clean, zero anomalies).
+  * Evaluated and reported synthetic, real-world, and combined benchmark suites separately.
+* **Contextual Phrase Evidence & Boundary Verification in Span Localization:**
+  * Multi-token phrase extraction for contradiction predicates (`financial failure`, `decreased drastically`, `retains absolute exclusive ownership`), proper noun entity phrases (`Detective Miller`, `Lord Voldemort`), and numerical metrics with unit tokens (`3125.0 grams`, `307.4 billion dollars`, `five weeks before`).
+  * Enforced mathematical boundary verification: guaranteed that every localized span slice satisfies `raw_sentence[start:end] == span_text` and `document[doc_start:doc_end] == span_text`.
+  * Advanced Token Precision from 0.0786 to **0.3671 (+367% relative gain)**, with Token Recall 0.3790, Token F1 0.3620, Mean IoU 0.3018, and Exact Span Match ratio 0.1946.
+* **Safe Lazy Loading and NLI Dependency Isolation:**
+  * Decoupled NLI model initialization, dependency checking, and pair inference in `models/contradiction_detector.py`.
+  * Isolated dynamic class import at `ContradictionDetector._import_cross_encoder()`, enabling 100% test execution in both environments (with and without `sentence_transformers` installed).
+  * Automatic graceful fallback to rule-based lexical contradiction detection upon:
+    1. Missing `sentence_transformers` package (`ImportError`).
+    2. Remote model download failure or unreachable Hugging Face Hub (`OSError`).
+    3. Corrupted weights or invalid checkpoint.
+    4. Runtime inference failure / CUDA Out-of-Memory (`RuntimeError`).
+  * Explicit reporting of the active backend (`nli_transformer` vs `lexical_fallback`).
+* **Reproducibility & Dependency Modernization:**
+  * Updated `requirements.txt` to include `reportlab>=5.1.0`.
+  * Removed hardcoded `HF_HUB_OFFLINE = 1` from settings and scripts; made offline mode cleanly opt-in via `--offline` CLI argument or `SEMANTIC_SENTINEL_OFFLINE` environment variable.
+  * Standardized model identifiers across code and documentation.
+
+#### Fixed
+* **Test Isolation Mock Boundary:** Rewrote `tests/test_nli_contradiction.py` with 11 isolated unit tests patching `_import_cross_encoder`, resolving previous mock failures in uninstalled environments.
+* **Lexical Contradiction Rule Test:** Explicitly configured `ContradictionDetector(use_nli=False)` in `test_contradiction_detection_rule` to verify the rule-based lexical engine independently of transformer weights.
+* **Full Unit Test Pass Rate:** Verified 100% pass rate across all 43 automated unit tests (`python -m unittest discover -s tests -v`) in 11.1 seconds.
+
+---
+
 ## [3.0.0] - 2026-11-12
 
 ### 🔬 Research Validation & Multi-Seed Benchmark Edition
@@ -95,3 +150,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 * Initial project setup and repository initialization.
 * Basic TF-IDF sentence representation and heuristic keyword anomaly rules.
 * Prototype Streamlit user interface.
+

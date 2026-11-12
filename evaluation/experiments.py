@@ -19,6 +19,7 @@ import pandas as pd
 import numpy as np
 
 from utils.logging_config import logger
+from config.settings import StandardDGSAWeights
 from models.dgsa_model import DGSAModel, DGSAResult
 from evaluation.baselines import BaselineRunner
 from evaluation.metrics import compute_sentence_metrics, ClassificationMetrics
@@ -172,10 +173,11 @@ class ExperimentHarness:
         all_l = [l for res in test_doc_results for l in res.local_scores]
         all_c = [c for res in test_doc_results for c in res.contradiction_scores]
 
-        # Model 5: DGSA without Contradiction (Global + Local Context Only, alpha=0.47, beta=0.53, gamma=0.0)
+        # Model 5: DGSA without Contradiction (Global + Local Context Only, alpha=0.50, beta=0.50, gamma=0.0)
+        w_gl = StandardDGSAWeights.GLOBAL_LOCAL
         dgsa_no_contra_scores = [
-            0.47 * g + 0.53 * l
-            for g, l in zip(all_g, all_l)
+            w_gl["alpha"] * g + w_gl["beta"] * l + w_gl["gamma"] * c
+            for g, l, c in zip(all_g, all_l, all_c)
         ]
         dgsa_no_contra_preds = [1 if s >= calibrated_th else 0 for s in dgsa_no_contra_scores]
         m_no_contra = compute_sentence_metrics(test_labels, dgsa_no_contra_preds, dgsa_no_contra_scores)
@@ -311,6 +313,9 @@ class ExperimentHarness:
             })
         summary_category_df = pd.DataFrame(cat_summary_rows)
 
+        # Generate aggregated and per-seed confusion matrix table
+        confusion_matrices_df = self.build_confusion_matrix_table(raw_benchmark_df, raw_ablation_df)
+
         return {
             "summary_benchmark": summary_benchmark_df,
             "raw_benchmark": raw_benchmark_df,
@@ -318,10 +323,79 @@ class ExperimentHarness:
             "raw_ablation": raw_ablation_df,
             "summary_category": summary_category_df,
             "raw_category": raw_category_df,
+            "confusion_matrices": confusion_matrices_df,
             "aggregated_span_metrics": aggregated_span_metrics,
             "seeds": seeds,
             "mean_calibrated_threshold": round(float(np.mean(thresholds)), 4)
         }
+
+    @staticmethod
+    def build_confusion_matrix_table(
+        raw_benchmark_df: pd.DataFrame,
+        raw_ablation_df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """
+        Builds aggregated and per-seed confusion matrix table (TP, FP, TN, FN)
+        for every baseline, proposed model, and ablation configuration.
+        """
+        rows = []
+        # 1. Comparative Baselines & Models
+        for model_name, grp in raw_benchmark_df.groupby("Model", sort=False):
+            tp = int(grp["TP"].sum())
+            fp = int(grp["FP"].sum())
+            tn = int(grp["TN"].sum())
+            fn = int(grp["FN"].sum())
+            total = tp + fp + tn + fn
+            prec = round(float(tp / (tp + fp)), 4) if (tp + fp) > 0 else 0.0
+            rec = round(float(tp / (tp + fn)), 4) if (tp + fn) > 0 else 0.0
+            f1 = round(float(2 * prec * rec / (prec + rec)), 4) if (prec + rec) > 0 else 0.0
+            acc = round(float((tp + tn) / total), 4) if total > 0 else 0.0
+            spec = round(float(tn / (tn + fp)), 4) if (tn + fp) > 0 else 0.0
+
+            rows.append({
+                "Evaluation Type": "Comparative Model",
+                "Model / Configuration": model_name,
+                "TP": tp,
+                "FP": fp,
+                "TN": tn,
+                "FN": fn,
+                "Precision": prec,
+                "Recall": rec,
+                "F1-Score": f1,
+                "Accuracy": acc,
+                "Specificity": spec,
+                "Total Evaluated": total
+            })
+
+        # 2. Ablation Configurations
+        for config_name, grp in raw_ablation_df.groupby("Configuration", sort=False):
+            tp = int(grp["TP"].sum())
+            fp = int(grp["FP"].sum())
+            tn = int(grp["TN"].sum())
+            fn = int(grp["FN"].sum())
+            total = tp + fp + tn + fn
+            prec = round(float(tp / (tp + fp)), 4) if (tp + fp) > 0 else 0.0
+            rec = round(float(tp / (tp + fn)), 4) if (tp + fn) > 0 else 0.0
+            f1 = round(float(2 * prec * rec / (prec + rec)), 4) if (prec + rec) > 0 else 0.0
+            acc = round(float((tp + tn) / total), 4) if total > 0 else 0.0
+            spec = round(float(tn / (tn + fp)), 4) if (tn + fp) > 0 else 0.0
+
+            rows.append({
+                "Evaluation Type": "Ablation Study",
+                "Model / Configuration": config_name,
+                "TP": tp,
+                "FP": fp,
+                "TN": tn,
+                "FN": fn,
+                "Precision": prec,
+                "Recall": rec,
+                "F1-Score": f1,
+                "Accuracy": acc,
+                "Specificity": spec,
+                "Total Evaluated": total
+            })
+
+        return pd.DataFrame(rows)
 
     def _run_test_ablation(
         self,
@@ -337,13 +411,13 @@ class ExperimentHarness:
         Uses exact precomputed G(i), L(i), C(i) component signals for zero-latency deterministic ablation.
         """
         configs = [
-            ("1. Global Only (alpha=1.0, beta=0, gamma=0)", {"alpha": 1.0, "beta": 0.0, "gamma": 0.0}),
-            ("2. Local Only (alpha=0, beta=1.0, gamma=0)", {"alpha": 0.0, "beta": 1.0, "gamma": 0.0}),
-            ("3. Contradiction Only (alpha=0, beta=0, gamma=1.0)", {"alpha": 0.0, "beta": 0.0, "gamma": 1.0}),
-            ("4. Global + Local (alpha=0.5, beta=0.5, gamma=0)", {"alpha": 0.5, "beta": 0.5, "gamma": 0.0}),
-            ("5. Global + Contradiction (alpha=0.5, beta=0, gamma=0.5)", {"alpha": 0.5, "beta": 0.0, "gamma": 0.5}),
-            ("6. Local + Contradiction (alpha=0, beta=0.5, gamma=0.5)", {"alpha": 0.0, "beta": 0.5, "gamma": 0.5}),
-            ("7. Full DGSA (alpha=0.35, beta=0.40, gamma=0.25)", {"alpha": 0.35, "beta": 0.40, "gamma": 0.25}),
+            ("1. Global Only (alpha=1.0, beta=0, gamma=0)", StandardDGSAWeights.GLOBAL_ONLY),
+            ("2. Local Only (alpha=0, beta=1.0, gamma=0)", StandardDGSAWeights.LOCAL_ONLY),
+            ("3. Contradiction Only (alpha=0, beta=0, gamma=1.0)", StandardDGSAWeights.CONTRADICTION_ONLY),
+            ("4. Global + Local (alpha=0.5, beta=0.5, gamma=0)", StandardDGSAWeights.GLOBAL_LOCAL),
+            ("5. Global + Contradiction (alpha=0.5, beta=0, gamma=0.5)", StandardDGSAWeights.GLOBAL_CONTRADICTION),
+            ("6. Local + Contradiction (alpha=0, beta=0.5, gamma=0.5)", StandardDGSAWeights.LOCAL_CONTRADICTION),
+            ("7. Full DGSA (alpha=0.35, beta=0.40, gamma=0.25)", StandardDGSAWeights.FULL_DGSA),
         ]
 
         rows = []

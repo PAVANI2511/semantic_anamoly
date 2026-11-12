@@ -1,2 +1,2 @@
 avg_token_precision,avg_token_recall,avg_token_f1,avg_token_iou,avg_exact_match_ratio,num_seeds
-0.217,0.283,0.2415,0.2238,0.131,3
+0.3671,0.379,0.362,0.3018,0.1946,3

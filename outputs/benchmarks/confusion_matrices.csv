@@ -1,0 +1,14 @@
+Evaluation Type,Model / Configuration,TP,FP,TN,FN,Precision,Recall,F1-Score,Accuracy,Specificity,Total Evaluated
+Comparative Model,TF-IDF + Isolation Forest,0,5,89,13,0.0,0.0,0.0,0.8318,0.9468,107
+Comparative Model,S-BERT + Isolation Forest,5,41,53,8,0.1087,0.3846,0.1695,0.5421,0.5638,107
+Comparative Model,S-BERT + One-Class SVM,13,94,0,0,0.1215,1.0,0.2167,0.1215,0.0,107
+Comparative Model,Supervised Logistic Regression,9,50,44,4,0.1525,0.6923,0.2499,0.4953,0.4681,107
+Comparative Model,DGSA w/o Contradiction (Global+Local),8,38,56,5,0.1739,0.6154,0.2712,0.5981,0.5957,107
+Comparative Model,"DGSA Full (Proposed, NLI DeBERTa)",12,10,84,1,0.5455,0.9231,0.6858,0.8972,0.8936,107
+Ablation Study,"1. Global Only (alpha=1.0, beta=0, gamma=0)",5,0,94,8,1.0,0.3846,0.5555,0.9252,1.0,107
+Ablation Study,"2. Local Only (alpha=0, beta=1.0, gamma=0)",13,81,13,0,0.1383,1.0,0.243,0.243,0.1383,107
+Ablation Study,"3. Contradiction Only (alpha=0, beta=0, gamma=1.0)",7,13,81,6,0.35,0.5385,0.4243,0.8224,0.8617,107
+Ablation Study,"4. Global + Local (alpha=0.5, beta=0.5, gamma=0)",8,38,56,5,0.1739,0.6154,0.2712,0.5981,0.5957,107
+Ablation Study,"5. Global + Contradiction (alpha=0.5, beta=0, gamma=0.5)",7,11,83,6,0.3889,0.5385,0.4516,0.8411,0.883,107
+Ablation Study,"6. Local + Contradiction (alpha=0, beta=0.5, gamma=0.5)",7,13,81,6,0.35,0.5385,0.4243,0.8224,0.8617,107
+Ablation Study,"7. Full DGSA (alpha=0.35, beta=0.40, gamma=0.25)",12,10,84,1,0.5455,0.9231,0.6858,0.8972,0.8936,107

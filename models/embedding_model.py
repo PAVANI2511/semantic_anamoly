@@ -82,9 +82,13 @@ class TransformerEmbeddingModel(BaseEmbeddingModel):
         try:
             model = SentenceTransformer(model_name, device=target_device)
         except Exception as e:
-            logger.info("Attempting offline load...")
-            os.environ["HF_HUB_OFFLINE"] = "1"
-            model = SentenceTransformer(model_name, device=target_device)
+            logger.info(f"Initial load attempt failed ({e}); attempting local cache fallback...")
+            try:
+                # Attempt local load if cached weights exist
+                model = SentenceTransformer(model_name, device=target_device, local_files_only=True)
+            except Exception:
+                # Re-raise original error if local load also fails
+                raise e
 
         cls._model_cache[cache_key] = model
         return model
