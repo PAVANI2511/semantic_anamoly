@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Semantic Sentinel - Document Anomaly Audit Report</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 30px; color: #2c3e50; line-height: 1.5; }
+        h1 { color: #1a365d; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .summary-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 25px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; text-align: center; margin-top: 15px; }
+        .metric-card { background: white; padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .metric-val { font-size: 24px; font-weight: bold; color: #2b6cb0; }
+        .metric-lbl { font-size: 12px; color: #718096; text-transform: uppercase; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #e2e8f0; text-align: left; font-size: 14px; vertical-align: top; }
+        th { background: #edf2f7; font-weight: 600; }
+        .badge-danger { background: #fed7d7; color: #9b2c2c; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge-success { background: #c6f6d5; color: #22543d; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .table-warning { background-color: #fffaf0; }
+        code { background: #fed7d7; color: #9b2c2c; padding: 2px 4px; border-radius: 3px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>Semantic Sentinel Analysis Report</h1>
+    <div class="summary-box">
+        <h3>Executive Assessment: Semantically Coherent: No anomalies detected.</h3>
+        <p><b>Embedding Model:</b> sentence-transformers/all-MiniLM-L6-v2 | <b>Threshold:</b> 0.5 | <b>Latency:</b> 377.91 ms</p>
+        <p><b>DGSA Formula:</b> A(i) = 0.35&middot;G(i) + 0.40&middot;L(i) + 0.25&middot;C(i)</p>
+        <div class="grid">
+            <div class="metric-card"><div class="metric-val">38</div><div class="metric-lbl">Total Sentences</div></div>
+            <div class="metric-card"><div class="metric-val">0</div><div class="metric-lbl">Anomalies Detected</div></div>
+            <div class="metric-card"><div class="metric-val">0.0%</div><div class="metric-lbl">Anomaly Rate</div></div>
+            <div class="metric-card"><div class="metric-val">38</div><div class="metric-lbl">Normal Sentences</div></div>
+        </div>
+    </div>
+
+    <h3>Detailed Sentence-Level Audit</h3>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 5%;">ID</th>
+                <th style="width: 42%;">Sentence Text & Localized Spans</th>
+                <th style="width: 8%;">Status</th>
+                <th style="width: 8%;">Score A(i)</th>
+                <th style="width: 15%;">Category</th>
+                <th style="width: 22%;">Explanation & Contributing Signals</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            <tr class="">
+                <td><b>#1</b></td>
+                <td># Artificial Intelligence Research Project Report</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#2</b></td>
+                <td>## 1.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#3</b></td>
+                <td>Introduction</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#4</b></td>
+                <td>Artificial Intelligence (AI) is transforming modern industries by enabling machines to perform tasks that traditionally require human intelligence.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.260</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.26).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#5</b></td>
+                <td>Machine learning, deep learning, and natural language processing are widely used in healthcare, education, finance, and transportation.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.262</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.26).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#6</b></td>
+                <td>Machine learning systems learn patterns from historical data and use those patterns to make predictions.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.240</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.24).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#7</b></td>
+                <td>The quality of the training data plays an important role in determining model performance.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.293</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.29).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#8</b></td>
+                <td>## 2.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#9</b></td>
+                <td>Project Overview</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#10</b></td>
+                <td>The proposed project focuses on developing an intelligent document analysis system that identifies semantic inconsistencies in text documents.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.207</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.21).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#11</b></td>
+                <td>The system analyzes document context, sentence relationships, and semantic contradictions.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.191</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.19).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#12</b></td>
+                <td>The application uses Python for backend processing and Streamlit for its user interface.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.362</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.36).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#13</b></td>
+                <td>Sentence Transformers are used to generate semantic embeddings.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.275</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.28).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#14</b></td>
+                <td>## 3.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#15</b></td>
+                <td>Methodology</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#16</b></td>
+                <td>The system follows three major stages:</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.377</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.38).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#17</b></td>
+                <td>1.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#18</b></td>
+                <td>Global Context Analysis: Understands the overall topic and meaning of the document.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.219</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.22).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#19</b></td>
+                <td>2.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#20</b></td>
+                <td>Local Context Analysis: Examines relationships between neighboring sentences.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.210</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.21).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#21</b></td>
+                <td>3.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#22</b></td>
+                <td>Contradiction Detection: Identifies statements that conflict with previously established information.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.279</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.28).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#23</b></td>
+                <td>The three components are combined to calculate an anomaly score for each sentence.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.247</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.25).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#24</b></td>
+                <td>## 4.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#25</b></td>
+                <td>Experimental Results</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#26</b></td>
+                <td>The system was evaluated using a dataset containing 500 documents.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.194</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.19).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#27</b></td>
+                <td>The dataset consisted of academic reports, business documents, and technical articles.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.217</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.22).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#28</b></td>
+                <td>The proposed model achieved an accuracy of 94% and an F1-score of 91%.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.279</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.28).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#29</b></td>
+                <td>The evaluation was conducted using a separate test dataset that was not used during model training.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.341</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.34).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#30</b></td>
+                <td>## 5.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#31</b></td>
+                <td>Technical Implementation</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#32</b></td>
+                <td>Python was selected because of its extensive machine learning ecosystem.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.307</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.31).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#33</b></td>
+                <td>PyTorch supports model development, while Hugging Face Transformers provides access to pretrained language models.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.334</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.33).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#34</b></td>
+                <td>The application stores uploaded documents and generates downloadable reports.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.338</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.34).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#35</b></td>
+                <td>## 6.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#36</b></td>
+                <td>Conclusion</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.000</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.00).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#37</b></td>
+                <td>The proposed system demonstrates how semantic analysis can help identify inconsistencies in documents.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.227</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.23).</small></td>
+            </tr>
+            
+            <tr class="">
+                <td><b>#38</b></td>
+                <td>Future improvements may include multilingual document analysis, larger evaluation datasets, and improved anomaly localization.</td>
+                <td><span class="badge-success">NORMAL</span></td>
+                <td><b>0.244</b></td>
+                <td>Consistent</td>
+                <td><small>Sentence conforms to document semantics (Score: 0.24).</small></td>
+            </tr>
+            
+        </tbody>
+    </table>
+</body>
+</html>

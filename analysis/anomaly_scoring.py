@@ -128,8 +128,14 @@ class DGSAScorer:
         secondary: List[str] = []
         candidate_scores: Dict[str, float] = {}
 
-        # 1. Contradiction Signal
-        if contradiction_score >= 0.40 or (contradiction_detail and contradiction_detail.get("reasons")):
+        # 1. Contradiction & Numerical Conflict Signal
+        contra_reasons = contradiction_detail.get("reasons", []) if contradiction_detail else []
+        is_num_conflict = any("numerical" in r.lower() or "number" in r.lower() for r in contra_reasons)
+
+        if is_num_conflict and contradiction_score >= 0.50:
+            evidence.append(f"Numerical inconsistency detected: {'; '.join(contra_reasons)}")
+            candidate_scores[AnomalyCategories.NUMERICAL_INCONSISTENCY] = contradiction_score + 0.10
+        elif contradiction_score >= 0.40 or (contradiction_detail and contradiction_detail.get("reasons")):
             backend = contradiction_detail.get("backend", "heuristic")
             evidence.append(f"Contradiction detected via {backend} (Score: {contradiction_score:.2f})")
             candidate_scores[AnomalyCategories.CONTRADICTION] = contradiction_score

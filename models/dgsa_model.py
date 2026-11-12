@@ -121,7 +121,7 @@ class DGSAModel:
 
         # Step 4: Local Semantic Context Analysis
         norm_local, raw_local, local_details = self.local_analyzer.compute_local_inconsistencies(
-            embeddings, sentences
+            embeddings, sentences, global_scores=norm_global
         )
 
         # Step 5: Contradiction Detection
@@ -150,8 +150,25 @@ class DGSAModel:
         ]
 
         for i in range(num_sentences):
-            score = float(composite_scores[i])
-            flagged = score >= threshold
+            # Enforce that structural elements and headings are never flagged as anomalies
+            if getattr(sentences[i], "is_structural", False) or getattr(sentences[i], "is_heading", False):
+                composite_scores[i] = 0.0
+                score = 0.0
+                flagged = False
+            else:
+                score = float(composite_scores[i])
+                # Direct contradiction override: Acute semantic or numerical contradiction triggers anomaly
+                is_direct_contradiction = (
+                    enable_contradiction and
+                    norm_contra[i] >= 0.65 and
+                    contra_details[i].get("conflicting_sentence_idx") is not None
+                )
+                if is_direct_contradiction:
+                    flagged = True
+                    score = max(score, float(norm_contra[i]))
+                    composite_scores[i] = score
+                else:
+                    flagged = score >= threshold
             is_anomaly.append(flagged)
 
             # Infer evidence-grounded category

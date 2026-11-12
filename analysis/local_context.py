@@ -17,7 +17,36 @@ class LocalContextAnalyzer:
     """
     Analyzes pairwise sentence coherence within a sliding window and identifies
     sudden local topic dislocations, entity shifts, and contextual fractures.
+    Section-aware and technical-vocabulary-aware to prevent false positives.
     """
+
+    TECHNICAL_AND_SECTION_WORDS = {
+        # Section titles & organization
+        "Introduction", "Overview", "Project", "Methodology", "Methods",
+        "Results", "Experimental", "Technical", "Implementation", "Discussion",
+        "Conclusion", "Conclusions", "Abstract", "Evaluation", "Background",
+        "Architecture", "Analysis", "References", "Appendix", "Contradiction",
+        "Detection", "Stage", "Stages", "Phase", "Phases", "Step", "Steps",
+        "Context", "Global", "Local",
+        # Programming languages, frameworks & NLP tools
+        "Python", "Streamlit", "PyTorch", "Torch", "Hugging", "Face", "Transformers",
+        "Sentence", "DeBERTa", "BERT", "CrossEncoder", "NumPy", "Pandas",
+        "Scikit", "Learn", "NLTK", "Spacy", "TensorFlow", "Keras",
+        "API", "REST", "JSON", "CSV", "PDF", "HTML", "SQL", "CUDA",
+        "Linux", "Windows", "Git", "Docker", "Database", "Dataset",
+        # Common technical/document vocabulary
+        "Model", "System", "Application", "Pipeline", "Framework", "Library",
+        "Algorithm", "Embedding", "Embeddings", "Artificial", "Intelligence",
+        "Machine", "Learning", "Deep", "Natural", "Language", "Processing",
+        "Data", "Information", "Report", "Document"
+    }
+
+    COMMON_WORDS = {
+        "The", "A", "An", "In", "On", "At", "However", "Therefore", "Moreover",
+        "Furthermore", "This", "That", "These", "Those", "It", "Twelve", "High",
+        "Emergency", "Geological", "Telemetry", "Average", "Scientific", "Global",
+        "Comprehensive", "Mitigating", "Future", "Unlike", "Advanced", "Operating"
+    }
 
     def __init__(self, window_size: int = 2):
         self.window_size = window_size
@@ -29,10 +58,13 @@ class LocalContextAnalyzer:
         self,
         sentence_embeddings: np.ndarray,
         sentences: List[SentenceItem],
-        window_size: int | None = None
+        window_size: int | None = None,
+        global_scores: Optional[np.ndarray] = None
     ) -> Tuple[np.ndarray, np.ndarray, List[Dict[str, Any]]]:
         """
         Computes the local contextual inconsistency score L(i) for each sentence.
+        Incorporates section boundary awareness, prose-only neighbor filtering,
+        and global topic affinity damping.
 
         Returns:
             - normalized_local_scores: np.ndarray [N] in [0, 1]
@@ -63,38 +95,97 @@ class LocalContextAnalyzer:
         sentence_numbers = [self._numeric_pattern.findall(s.text) for s in sentences]
         sentence_dates = [self._date_pattern.findall(s.text) for s in sentences]
 
+        # Identify structural sentences to exclude from prose neighbor analysis
+        is_structural_mask = [
+            getattr(s, "is_structural", False) or getattr(s, "is_heading", False)
+            for s in sentences
+        ]
+
         for i in range(num_sentences):
-            neighbor_indices = get_sliding_window_neighbors(i, num_sentences, effective_window)
-            if not neighbor_indices:
+            # Guard: Structural headings and markers receive 0.0 local inconsistency
+            if is_structural_mask[i]:
+                raw_scores[i] = 0.0
+                local_details.append({
+                    "neighbor_indices": [],
+                    "neighbor_sims": [],
+                    "mean_neighbor_sim": 1.0,
+                    "is_bridge_anomaly": False,
+                    "entity_novelty": 0.0,
+                    "unshared_entities": [],
+                    "entities": [],
+                    "numbers": [],
+                    "dates": []
+                })
+                continue
+
+            raw_neighbor_indices = get_sliding_window_neighbors(i, num_sentences, effective_window)
+            # Filter out structural elements from neighbors so they don't drag down prose scores
+            prose_neighbors = [idx for idx in raw_neighbor_indices if not is_structural_mask[idx]]
+
+            # If all immediate window neighbors were structural, expand window search for nearest prose sentences
+            if not prose_neighbors:
+                for dist in range(1, max(effective_window * 2 + 1, 6)):
+                    for offset in [-dist, dist]:
+                        cand_idx = i + offset
+                        if 0 <= cand_idx < num_sentences and not is_structural_mask[cand_idx]:
+                            if cand_idx not in prose_neighbors:
+                                prose_neighbors.append(cand_idx)
+                    if len(prose_neighbors) >= 2:
+                        break
+
+            if not prose_neighbors:
                 raw_scores[i] = 0.0
                 local_details.append({"neighbor_sims": [], "is_bridge_anomaly": False, "entity_novelty": 0.0})
                 continue
 
-            neighbor_sims = sim_matrix[i, neighbor_indices]
+            neighbor_sims = sim_matrix[i, prose_neighbors]
             mean_neighbor_sim = float(np.mean(neighbor_sims))
-            base_inconsistency = max(0.0, 1.0 - mean_neighbor_sim)
+            max_neighbor_sim = float(np.max(neighbor_sims))
+
+            # Effective continuity: In multi-aspect technical sections, strong connection
+            # to AT LEAST ONE neighboring sentence signifies legitimate narrative progression.
+            effective_sim = 0.55 * max_neighbor_sim + 0.45 * mean_neighbor_sim
+            base_inconsistency = max(0.0, 1.0 - effective_sim)
+
+            # Global Topic Affinity Damping:
+            # If the sentence is demonstrably on-topic for the overall document (G(i) is low),
+            # damp the local neighbor penalty.
+            if global_scores is not None and len(global_scores) == num_sentences:
+                g_score = float(global_scores[i])
+                if g_score < 0.45:
+                    topic_damping = 0.40 + 0.60 * g_score
+                    base_inconsistency = base_inconsistency * topic_damping
 
             # 1. Bridge Anomaly Detection:
-            # If sentence i has predecessor (i-1) and successor (i+1),
-            # and (i-1) and (i+1) are strongly coherent with EACH OTHER,
-            # but sentence i is alienated from BOTH, this indicates an intrusive anomaly.
+            # Sentence i alienates both predecessor and successor who share strong mutual coherence.
+            # Must NOT trigger if sentence i is on-topic or an introductory sentence.
             is_bridge_anomaly = False
             bridge_penalty = 0.0
-            if 0 < i < num_sentences - 1:
-                prev_sim = sim_matrix[i, i - 1]
-                next_sim = sim_matrix[i, i + 1]
-                surrounding_sim = sim_matrix[i - 1, i + 1]
+            
+            # Find closest preceding and succeeding prose sentences
+            prev_prose = [idx for idx in prose_neighbors if idx < i]
+            next_prose = [idx for idx in prose_neighbors if idx > i]
 
-                # Legitimate transition check:
-                # If i is similar to i+1 (initiating a new topic followed by i+1), it is NOT a bridge anomaly
-                if surrounding_sim > 0.40 and prev_sim < 0.35 and next_sim < 0.35:
+            if prev_prose and next_prose:
+                p_idx = max(prev_prose)
+                n_idx = min(next_prose)
+                prev_sim = sim_matrix[i, p_idx]
+                next_sim = sim_matrix[i, n_idx]
+                surrounding_sim = sim_matrix[p_idx, n_idx]
+
+                # Check if flanking sentences cross section boundaries
+                same_section = (getattr(sentences[p_idx], "section_id", 0) == getattr(sentences[n_idx], "section_id", 0))
+
+                # Legitimate transition / on-topic check:
+                is_on_topic = (global_scores is not None and len(global_scores) == num_sentences and global_scores[i] < 0.42)
+                if same_section and not is_on_topic and surrounding_sim > 0.45 and prev_sim < 0.30 and next_sim < 0.30:
                     is_bridge_anomaly = True
                     bridge_penalty = float(surrounding_sim - max(prev_sim, next_sim))
 
             # 2. Entity Novelty & Inconsistency check
             current_ents = sentence_entities[i]
             neighbor_ents = set()
-            for n_idx in neighbor_indices:
+            for n_idx in prose_neighbors:
                 neighbor_ents.update(sentence_entities[n_idx])
 
             entity_novelty = 0.0
@@ -102,22 +193,25 @@ class LocalContextAnalyzer:
             if current_ents and num_sentences >= 3:
                 unshared = [e for e in current_ents if e not in neighbor_ents]
                 # Only penalize if unshared entity is also alien to the whole document except this sentence
-                alien_ents = []
-                for ent in unshared:
-                    doc_occurrences = sum(1 for ents in sentence_entities if ent in ents)
-                    if doc_occurrences == 1:
-                        alien_ents.append(ent)
-                if alien_ents:
-                    entity_novelty = len(alien_ents) / max(len(current_ents), 1)
-                    unshared_entities = alien_ents
+                # AND sentence is globally divergent (not normal on-topic technical prose)
+                is_on_topic = (global_scores is not None and len(global_scores) == num_sentences and global_scores[i] < 0.42)
+                if not is_on_topic:
+                    alien_ents = []
+                    for ent in unshared:
+                        doc_occurrences = sum(1 for ents in sentence_entities if ent in ents)
+                        if doc_occurrences == 1:
+                            alien_ents.append(ent)
+                    if alien_ents:
+                        entity_novelty = len(alien_ents) / max(len(current_ents), 1)
+                        unshared_entities = alien_ents
 
             # 3. Numeric & Date conflict indicator
             has_numeric_anomaly = False
-            if sentence_numbers[i] and 0 < i:
-                prev_nums = set(sentence_numbers[i - 1])
+            if sentence_numbers[i] and prev_prose:
+                p_idx = max(prev_prose)
+                prev_nums = set(sentence_numbers[p_idx])
                 curr_nums = set(sentence_numbers[i])
-                # If sentences share strong semantic vocabulary but have conflicting numbers/percentages
-                shared_words = set(sentences[i].tokens) & set(sentences[i - 1].tokens)
+                shared_words = set(sentences[i].tokens) & set(sentences[p_idx].tokens)
                 if len(shared_words) >= 3 and curr_nums and prev_nums and not (curr_nums & prev_nums):
                     has_numeric_anomaly = True
 
@@ -131,9 +225,10 @@ class LocalContextAnalyzer:
             raw_scores[i] = raw_score
 
             local_details.append({
-                "neighbor_indices": neighbor_indices,
+                "neighbor_indices": prose_neighbors,
                 "neighbor_sims": [float(s) for s in neighbor_sims],
                 "mean_neighbor_sim": mean_neighbor_sim,
+                "effective_sim": effective_sim,
                 "is_bridge_anomaly": is_bridge_anomaly,
                 "entity_novelty": float(entity_novelty),
                 "unshared_entities": unshared_entities,
@@ -146,29 +241,31 @@ class LocalContextAnalyzer:
         return normalized_scores, raw_scores.astype(np.float32), local_details
 
     def _extract_entities(self, text: str) -> Set[str]:
-        """Extracts named entities and proper nouns, ignoring sentence-initial common words."""
+        """
+        Extracts genuine proper named entities, ignoring section titles,
+        common English words, and technical programming terminology.
+        """
         tokens = re.findall(r'\b[A-Za-z0-9_-]+\b', text)
         if not tokens:
             return set()
 
         entities = set()
-        common_words = {
-            "The", "A", "An", "In", "On", "At", "However", "Therefore", "Moreover",
-            "Furthermore", "This", "That", "These", "Those", "It", "Twelve", "High",
-            "Emergency", "Geological", "Telemetry", "Average", "Scientific", "Global",
-            "Comprehensive", "Mitigating", "Future", "Unlike", "Advanced", "Operating"
-        }
+        all_excluded = self.COMMON_WORDS | self.TECHNICAL_AND_SECTION_WORDS
 
         # Subsequent capitalized tokens (ignoring sentence-initial capital unless multi-word)
         for token in tokens[1:]:
-            if token[0].isupper() and token not in common_words and len(token) > 2:
+            if token[0].isupper() and token not in all_excluded and len(token) > 2:
                 entities.add(token)
 
-        # Multi-word proper names anywhere (e.g. "Detective Miller", "Jezero Crater", "Fortune 500")
+        # Multi-word proper names (e.g. "Detective Miller", "Jezero Crater")
         multi_matches = self._entity_pattern.findall(text)
         for m in multi_matches:
             parts = m.split()
-            if len(parts) >= 2 and parts[0] not in common_words:
-                entities.add(m.strip())
+            if len(parts) >= 2:
+                # If all parts are technical/section words, ignore
+                if not all(p in all_excluded for p in parts) and parts[0] not in self.COMMON_WORDS:
+                    # Ignore title-cased section headings
+                    if not any(p in self.TECHNICAL_AND_SECTION_WORDS for p in parts):
+                        entities.add(m.strip())
 
         return entities

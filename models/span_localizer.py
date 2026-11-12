@@ -50,7 +50,28 @@ class SpanLocalizer:
         "this", "that", "these", "those", "it", "its", "as", "if", "each", "both",
         "your", "my", "our", "their", "more", "most", "some", "such", "than", "too",
         "very", "can", "will", "just", "should", "now", "then", "which", "who", "whom",
-        "where", "when", "why", "how", "all", "any", "other", "also", "well", "there"
+        "where", "when", "why", "how", "all", "any", "other", "also", "well", "there",
+        "while", "whereas", "although", "overall", "separately", "accordingly"
+    }
+
+    GENERIC_WORDS = {
+        # Generic verbs & participles
+        "uses", "used", "using", "supports", "supported", "supporting",
+        "provides", "provided", "providing", "conducted", "conducting",
+        "performs", "performed", "performing", "follows", "followed",
+        "includes", "included", "identifies", "identified", "examines",
+        "examined", "combines", "combined", "stores", "stored",
+        "generates", "generated", "achieved", "consisted", "selected",
+        "demonstrates", "understands", "learning", "training", "development",
+        "evaluating", "evaluated", "developing", "enabling",
+        # Generic technical & document nouns
+        "system", "systems", "application", "applications", "method", "methods",
+        "model", "models", "approach", "process", "overview", "results",
+        "implementation", "evaluation", "analysis", "experiments", "conclusion",
+        "dataset", "datasets", "data", "report", "reports", "document", "documents",
+        "user", "backend", "interface", "stage", "stages", "component", "components",
+        "information", "intelligence", "industries", "machines", "tasks", "sentences",
+        "python", "streamlit", "pytorch", "transformers"
     }
 
     CONTRADICTION_PHRASES = [
@@ -143,7 +164,10 @@ class SpanLocalizer:
             prop_pattern = re.compile(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b')
             for m in prop_pattern.finditer(sentence.text):
                 phrase = m.group()
-                if global_context_tokens and not any(w.lower() in global_context_tokens for w in phrase.split()):
+                words_lower = [w.lower() for w in phrase.split()]
+                if any(w in self.GENERIC_WORDS or w in self.STOPWORDS for w in words_lower):
+                    continue
+                if global_context_tokens and not any(w in global_context_tokens for w in words_lower):
                     detected_spans.append(LocalizedSpan(
                         text=phrase,
                         start_char=sentence.start_char + m.start(),
@@ -155,7 +179,7 @@ class SpanLocalizer:
 
             for t_span in sentence.token_spans:
                 tok = t_span.text
-                if tok and tok[0].isupper() and tok.lower() not in self.STOPWORDS and len(tok) > 2:
+                if tok and tok[0].isupper() and tok.lower() not in self.STOPWORDS and tok.lower() not in self.GENERIC_WORDS and len(tok) > 2:
                     if global_context_tokens and tok.lower() not in global_context_tokens:
                         detected_spans.append(LocalizedSpan(
                             text=tok,
@@ -199,7 +223,7 @@ class SpanLocalizer:
             # Specific attribute tokens not present in document context
             attr_spans = [
                 s for s in sentence.token_spans
-                if len(s.text) > 3 and s.text.lower() not in self.STOPWORDS and s.text.isalpha()
+                if len(s.text) > 3 and s.text.lower() not in self.STOPWORDS and s.text.lower() not in self.GENERIC_WORDS and s.text.isalpha()
             ]
             for s in attr_spans:
                 if global_context_tokens and s.text.lower() not in global_context_tokens:
@@ -216,7 +240,7 @@ class SpanLocalizer:
         elif anomaly_category in {AnomalyCategories.TOPIC_DEVIATION, AnomalyCategories.CONTEXTUAL_INCONSISTENCY} and global_context_tokens:
             content_spans = [
                 s for s in sentence.token_spans
-                if len(s.text) > 3 and s.text.lower() not in self.STOPWORDS and s.text.isalpha()
+                if len(s.text) > 3 and s.text.lower() not in self.STOPWORDS and s.text.lower() not in self.GENERIC_WORDS and s.text.isalpha()
             ]
             outliers = [s for s in content_spans if s.text.lower() not in global_context_tokens]
             # Select top distinctive content tokens (up to 4) to maintain high precision
@@ -227,23 +251,6 @@ class SpanLocalizer:
                     end_char=s.end_char,
                     salience_score=0.85,
                     reason="Topical vocabulary outlier",
-                    method="lexical_divergence_attribution"
-                ))
-
-        # Defensive fallback if no specialized spans caught
-        if not detected_spans and is_anomalous and global_context_tokens:
-            content_spans = [
-                s for s in sentence.token_spans
-                if len(s.text) > 3 and s.text.lower() not in self.STOPWORDS and s.text.isalpha()
-            ]
-            outliers = [s for s in content_spans if s.text.lower() not in global_context_tokens]
-            for s in outliers[:2]:
-                detected_spans.append(LocalizedSpan(
-                    text=s.text,
-                    start_char=s.start_char,
-                    end_char=s.end_char,
-                    salience_score=0.75,
-                    reason="Contextual vocabulary outlier",
                     method="lexical_divergence_attribution"
                 ))
 

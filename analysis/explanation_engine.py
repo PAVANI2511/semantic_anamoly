@@ -113,48 +113,67 @@ class ExplanationEngine:
             novel_ents = local_details["entities"][:3]
             heuristic_indicators.append(f"Unprecedented named entity: {', '.join(novel_ents)}")
 
-        # Formulate contextual narrative
-        reasons_text = []
-        if category == AnomalyCategories.CONTRADICTION:
-            reasons = contradiction_details.get("reasons", [])
-            conflicting_idx = contradiction_details.get("conflicting_sentence_idx")
-            conflict_ref = f"sentence #{conflicting_idx + 1}" if conflicting_idx is not None else "preceding context"
-            if reasons:
-                reasons_text.append(f"Model detected semantic contradiction with {conflict_ref}: {'; '.join(reasons)}.")
+        # Formulate contextual narrative addressing:
+        # 1. Why was it flagged? (Primary contributing factor)
+        # 2. What is the specific evidence / conflicting sentence?
+        # 3. Detection signals breakdown and confidence
+        narrative_parts = []
+        if is_anomalous:
+            narrative_parts.append(
+                f"Flagged as {category.replace('_', ' ').title()}: "
+                f"{primary_factor} is the dominant signal "
+                f"(Score: {anomaly_score:.2f}, Threshold: 0.50)."
+            )
+
+            if category == AnomalyCategories.CONTRADICTION:
+                reasons = contradiction_details.get("reasons", [])
+                conflicting_idx = contradiction_details.get("conflicting_sentence_idx")
+                conflict_text = contradiction_details.get("conflicting_sentence_text", "")
+                if conflicting_idx is not None:
+                    snippet = f" ('{conflict_text[:50]}...')" if len(conflict_text) > 50 else (f" ('{conflict_text}')" if conflict_text else "")
+                    narrative_parts.append(
+                        f"Direct semantic conflict with sentence #{conflicting_idx + 1}{snippet}: "
+                        f"{'; '.join(reasons) if reasons else f'Evaluated via {contradiction_backend}'}."
+                    )
+                else:
+                    narrative_parts.append(f"Contradiction detected via {contradiction_backend}.")
                 for r in reasons:
                     heuristic_indicators.append(f"Contradiction clue: {r}")
+
+            elif category == AnomalyCategories.TOPIC_DEVIATION:
+                narrative_parts.append(
+                    f"Document centroid divergence: Cosine distance from document centroid is G={global_score:.2f} "
+                    f"(expected < 0.45), indicating foreign or alienated topic."
+                )
+                heuristic_indicators.append("Global embedding cosine distance above threshold")
+
+            elif category in {AnomalyCategories.ENTITY_INCONSISTENCY, AnomalyCategories.ATTRIBUTE_INCONSISTENCY}:
+                if local_details.get("is_bridge_anomaly"):
+                    narrative_parts.append(
+                        "Bridge anomaly: Preceding and following sentences maintain continuous narrative flow, "
+                        "while this sentence intrudes with unrelated content."
+                    )
+                unshared = local_details.get("unshared_entities", [])
+                if unshared:
+                    narrative_parts.append(f"Unprecedented out-of-domain entity reference: {', '.join(unshared[:3])}.")
+                else:
+                    narrative_parts.append(f"Attribute discontinuity (L={local_score:.2f}).")
+
             else:
-                reasons_text.append(
-                    f"Direct semantic contradiction detected against {conflict_ref} "
-                    f"using {contradiction_backend}."
+                mean_sim = local_details.get("mean_neighbor_sim", 0.0)
+                narrative_parts.append(
+                    f"Local contextual fracture: Sentence demonstrates low narrative continuity with surrounding "
+                    f"sentences (mean neighbor similarity {mean_sim:.2f}, local score L={local_score:.2f})."
                 )
-        elif category == AnomalyCategories.TOPIC_DEVIATION:
-            reasons_text.append(
-                f"Global semantic deviation is exceptionally high (G={global_score:.2f}). "
-                f"The semantic embedding diverges from the document centroid."
-            )
-            heuristic_indicators.append("Global embedding cosine distance above threshold")
-        elif category in {AnomalyCategories.ENTITY_INCONSISTENCY, AnomalyCategories.ATTRIBUTE_INCONSISTENCY}:
-            if local_details.get("is_bridge_anomaly"):
-                reasons_text.append(
-                    "Bridge anomaly detected: Flanking sentences share semantic continuity, "
-                    "but this sentence abruptly breaks narrative progression."
-                )
-            if local_details.get("entities"):
-                reasons_text.append(f"Contains novel or unlinked entities: {', '.join(local_details['entities'][:3])}.")
-        else:
-            reasons_text.append(
-                f"Local contextual inconsistency is prominent (L={local_score:.2f}), "
-                f"indicating low semantic similarity to immediate neighboring sentences."
-            )
 
-        if not is_anomalous:
+            # Certainty assessment based on signal magnitude
+            certainty = "high" if anomaly_score > 0.70 else ("moderate" if anomaly_score > 0.45 else "low")
+            certainty_pct = round(anomaly_score * 100, 1)
+            narrative_parts.append(f"Certainty: {certainty.capitalize()} ({certainty_pct}%).")
+            explanation_summary = " ".join(narrative_parts)
+        else:
+            certainty = "high" if anomaly_score > 0.70 else ("moderate" if anomaly_score > 0.45 else "low")
             explanation_summary = f"Sentence conforms to document semantics (Score: {anomaly_score:.2f})."
-        else:
-            explanation_summary = " ".join(reasons_text)
-
-        # Certainty assessment based on signal magnitude
-        certainty = "high" if anomaly_score > 0.70 else ("moderate" if anomaly_score > 0.45 else "low")
 
         spans_json = [
             {

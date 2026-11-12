@@ -36,6 +36,13 @@ class ContradictionDetector:
 
     NEGATION_TERMS = {"not", "never", "no", "neither", "nor", "hardly", "scarcely", "barely", "none", "cannot", "n't"}
 
+    GENERIC_DOMAIN_TERMS = {
+        "system", "systems", "model", "models", "analysis", "context",
+        "document", "documents", "process", "processes", "approach",
+        "method", "methods", "stage", "stages", "component", "components",
+        "data", "application", "sentence", "sentences", "information"
+    }
+
     _cached_nli_model: Any = None
     _cached_model_name: Optional[str] = None
 
@@ -171,6 +178,35 @@ class ContradictionDetector:
             logger.warning(f"NLI inference error ({e}). Seamlessly activating lexical fallback.")
             return None
 
+    @classmethod
+    def _is_evaluable_for_contradiction(cls, s: SentenceItem) -> bool:
+        """
+        Determines whether a sentence is evaluable for contradiction.
+        Structural elements, section headings, list numbers, and short non-sentence fragments
+        must never be evaluated as premises or hypotheses in contradiction detection.
+        """
+        if getattr(s, "is_structural", False) or getattr(s, "is_heading", False):
+            return False
+
+        text = s.cleaned_text if hasattr(s, "cleaned_text") and s.cleaned_text else s.text
+        words = text.split()
+        if len(words) < 3 or len(text) < 8:
+            return False
+
+        # Headings or title phrases without terminal punctuation
+        if len(words) <= 3 and not text.endswith(('.', '!', '?', ';', '"', "'")):
+            return False
+
+        # Ignore markdown heading hashes
+        if text.startswith(("#", "##", "###", "####")):
+            return False
+
+        # Ignore standalone list numbers or markers
+        if re.match(r'^(?:\d{1,3}\.|\([0-9a-zA-Z]+\)|[a-zA-Z]\.|\*|-|\+)\s*$', text):
+            return False
+
+        return True
+
     def compute_contradiction_scores(
         self,
         sentences: List[SentenceItem],
@@ -213,6 +249,12 @@ class ContradictionDetector:
                 "reasons": []
             }
 
+            # Guard 1: Non-evaluable sentences (headings, list numbers, fragments)
+            if not self._is_evaluable_for_contradiction(cand_sent):
+                raw_scores[i] = 0.0
+                details.append(best_conflict)
+                continue
+
             # Select candidate antecedent pairs within context window
             search_start = max(0, i - self.max_context_pairs)
             pairs_to_test = []
@@ -220,11 +262,16 @@ class ContradictionDetector:
 
             for j in range(search_start, i):
                 prev_sent = sentences[j]
+                # Guard 2: Antecedent must also be evaluable prose
+                if not self._is_evaluable_for_contradiction(prev_sent):
+                    continue
+
                 lexical_overlap = self._compute_subject_overlap(cand_sent.text, prev_sent.text)
                 emb_sim = sim_matrix[i, j] if sim_matrix is not None else 0.50
 
                 # Contradiction candidates require a shared topic or moderate semantic continuity
-                if lexical_overlap > 0.10 or emb_sim > 0.35:
+                # Sentences discussing disjoint topics/tools are not contradictory hypotheses
+                if lexical_overlap >= 0.15 or emb_sim >= 0.52:
                     pairs_to_test.append((prev_sent.text, cand_sent.text))
                     pair_indices.append(j)
 
@@ -240,26 +287,50 @@ class ContradictionDetector:
                         entail_prob = float(prob_vec[1])
                         neutral_prob = float(prob_vec[2])
 
-                        if contra_prob > max_contradiction:
-                            max_contradiction = contra_prob
-                            best_conflict = {
-                                "score": contra_prob,
-                                "backend": "nli_transformer",
-                                "conflicting_sentence_idx": j,
-                                "conflicting_sentence_text": sentences[j].text,
-                                "entailment_prob": round(entail_prob, 4),
-                                "neutral_prob": round(neutral_prob, 4),
-                                "reasons": [
-                                    f"NLI Cross-Encoder detected contradiction with sentence #{j+1} "
-                                    f"(Probability: {contra_prob*100:.1f}%)"
-                                ]
-                            }
+                        # Genuine contradiction criteria:
+                        # 1. Contradiction probability must dominate over neutral and entailment
+                        # 2. If neutral probability is high (>= 0.45) or contra <= neutral, it is neutral exposition
+                        if contra_prob >= 0.60 and contra_prob > neutral_prob and contra_prob > entail_prob:
+                            lex_score, _ = self._detect_lexical_contradiction(cand_sent.text, sentences[j].text)
+                            has_clue = lex_score > 0.30
+
+                            # Verify that the two sentences actually discuss the same specific subject/claim
+                            w1 = set(re.findall(r'\b\w{4,}\b', cand_sent.text.lower())) - self.GENERIC_DOMAIN_TERMS
+                            w2 = set(re.findall(r'\b\w{4,}\b', sentences[j].text.lower())) - self.GENERIC_DOMAIN_TERMS
+                            has_specific_overlap = len(w1.intersection(w2)) > 0
+
+                            # If no lexical clue exists and the pair lacks shared specific claim vocabulary,
+                            # they are descriptive parallel statements (e.g. list items), not contradictory assertions
+                            if not has_clue and not has_specific_overlap:
+                                continue
+
+                            # If no lexical polarity/negation clue exists and confidence is moderate, calibrate
+                            effective_prob = contra_prob
+                            if not has_clue and contra_prob < 0.85 and neutral_prob > 0.25:
+                                effective_prob = float(contra_prob * (1.0 - neutral_prob))
+
+                            if effective_prob > max_contradiction:
+                                max_contradiction = effective_prob
+                                best_conflict = {
+                                    "score": effective_prob,
+                                    "backend": "nli_transformer",
+                                    "conflicting_sentence_idx": j,
+                                    "conflicting_sentence_text": sentences[j].text,
+                                    "entailment_prob": round(entail_prob, 4),
+                                    "neutral_prob": round(neutral_prob, 4),
+                                    "reasons": [
+                                        f"NLI Cross-Encoder detected contradiction with sentence #{j+1} "
+                                        f"(Probability: {effective_prob*100:.1f}%)"
+                                    ]
+                                }
 
             # Execution Mode B: Lexical Fallback / Augmenter
             # Executed if NLI is inactive, or if NLI inference failed, or to augment lexical antonym clues
             if not nli_success or max_contradiction < 0.50:
                 for j in range(search_start, i):
                     prev_sent = sentences[j]
+                    if not self._is_evaluable_for_contradiction(prev_sent):
+                        continue
                     lex_score, lex_reasons = self._detect_lexical_contradiction(cand_sent.text, prev_sent.text)
                     if lex_score > max_contradiction:
                         max_contradiction = lex_score
